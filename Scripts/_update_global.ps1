@@ -49,32 +49,29 @@ try {
 $verNueva = "$($rel.tag_name)" -replace '^v',''
 if (-not (Es-VersionMayor $verNueva $verActual)) { Write-Output "AL-DIA:$verActual"; return }
 
-# Buscar el asset .zip de la release (preferir el de Skeledex/Update)
-$asset = $rel.assets | Where-Object { $_.name -match '(?i)(skeledex|update).*\.zip$' } | Select-Object -First 1
-if (-not $asset) { $asset = $rel.assets | Where-Object { $_.name -like '*.zip' } | Select-Object -First 1 }
+# La release trae el .exe directamente (autocontenido)
+$asset = $rel.assets | Where-Object { $_.name -like '*.exe' } | Select-Object -First 1
+if (-not $asset) {
+    # Compatibilidad: si trae un .zip, tambien sirve
+    $asset = $rel.assets | Where-Object { $_.name -like '*.zip' } | Select-Object -First 1
+}
 if (-not $asset) { Write-Output "SIN-ASSET"; return }
 
-$zip = Join-Path $env:TEMP "skeledex_update.zip"
-$tmp = Join-Path $env:TEMP "skeledex_update_x"
-try {
-    Invoke-WebRequest $asset.browser_download_url -OutFile $zip -UseBasicParsing -TimeoutSec 120 -Headers @{ 'User-Agent' = 'Skeledex' }
-} catch { Write-Output "ERROR:descarga"; return }
-if (Test-Path $tmp) { Remove-Item $tmp -Recurse -Force }
-try { Expand-Archive $zip $tmp -Force } catch { Write-Output "ERROR:zip"; return }
-
-# Aplicar Scripts (copy: nunca borra el mundo ni datos locales)
-$srcScripts = Get-ChildItem $tmp -Recurse -Directory -ErrorAction SilentlyContinue | Where-Object { $_.Name -eq 'Scripts' } | Select-Object -First 1
-if ($srcScripts) {
-    Copy-Item "$($srcScripts.FullName)\*" $rutaScripts -Recurse -Force
+$esExe = $asset.name -like '*.exe'
+if ($esExe) {
+    $destExe = Join-Path $rutaBase "_update.exe"
+    try { Invoke-WebRequest $asset.browser_download_url -OutFile $destExe -UseBasicParsing -TimeoutSec 300 -Headers @{ 'User-Agent' = 'Skeledex' } }
+    catch { Write-Output "ERROR:descarga"; return }
 } else {
-    # Si el zip trae los scripts en la raiz
-    Get-ChildItem $tmp -Filter '*.ps1' -ErrorAction SilentlyContinue | Copy-Item -Destination $rutaScripts -Force
+    # Modelo viejo (zip con Scripts + exe)
+    $zip = Join-Path $env:TEMP "skeledex_update.zip"; $tmp = Join-Path $env:TEMP "skeledex_update_x"
+    try { Invoke-WebRequest $asset.browser_download_url -OutFile $zip -UseBasicParsing -TimeoutSec 180 -Headers @{ 'User-Agent' = 'Skeledex' } } catch { Write-Output "ERROR:descarga"; return }
+    if (Test-Path $tmp) { Remove-Item $tmp -Recurse -Force }
+    try { Expand-Archive $zip $tmp -Force } catch { Write-Output "ERROR:zip"; return }
+    $srcExe = Get-ChildItem $tmp -Recurse -Filter '*.exe' -ErrorAction SilentlyContinue | Select-Object -First 1
+    if ($srcExe) { Copy-Item $srcExe.FullName (Join-Path $rutaBase "_update.exe") -Force }
+    Remove-Item $zip -Force -ErrorAction SilentlyContinue; Remove-Item $tmp -Recurse -Force -ErrorAction SilentlyContinue
 }
-
-# Aplicar el .exe (queda como _nuevo y se aplica al proximo arranque)
-$hayExe = $false
-$srcExe = Get-ChildItem $tmp -Recurse -Filter 'ServidorTecnico.exe' -ErrorAction SilentlyContinue | Select-Object -First 1
-if ($srcExe) { Copy-Item $srcExe.FullName (Join-Path $rutaBase "ServidorTecnico_nuevo.exe") -Force; $hayExe = $true }
 
 # Actualizar version local + sello de chequeo
 $config.identidad.version_sistema = $verNueva
@@ -82,7 +79,5 @@ if (-not $config.actualizaciones) { $config | Add-Member -NotePropertyName actua
 $config.actualizaciones.ultimo_chequeo = (Get-Date -Format "yyyy-MM-ddTHH:mm:ss")
 Guardar-TextoSinBOM -Ruta $archivoConfig -Contenido ($config | ConvertTo-Json -Depth 8)
 
-Remove-Item $zip -Force -ErrorAction SilentlyContinue
-Remove-Item $tmp -Recurse -Force -ErrorAction SilentlyContinue
 Escribir-Log "Programa actualizado a v$verNueva desde GitHub ($repo)." "OK"
-if ($hayExe) { Write-Output "ACTUALIZADO-EXE:$verNueva" } else { Write-Output "ACTUALIZADO:$verNueva" }
+Write-Output "ACTUALIZADO-EXE:$verNueva"

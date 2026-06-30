@@ -3,6 +3,7 @@
 use std::fs;
 use std::io::{Read, Write};
 use std::net::TcpStream;
+use std::path::Path;
 use std::process::Command;
 use std::time::Duration;
 #[cfg(windows)]
@@ -11,11 +12,42 @@ use std::os::windows::process::CommandExt;
 #[cfg(windows)]
 const CREATE_NO_WINDOW: u32 = 0x08000000;
 
+// Scripts embebidos en el .exe (generado por build.rs)
+include!(concat!(env!("OUT_DIR"), "/scripts_embed.rs"));
+
 fn nuevo_powershell() -> Command {
     let mut cmd = Command::new("PowerShell.exe");
     #[cfg(windows)]
     cmd.creation_flags(CREATE_NO_WINDOW);
     cmd
+}
+
+// Crea la estructura de carpetas y extrae los scripts si hace falta.
+// Asi el .exe funciona solo, desde una carpeta vacia.
+fn asegurar_estructura() {
+    let base = ruta_base_interna();
+    for d in ["Scripts", "Estado", "Instancia", "Registros", "Configuracion"] {
+        let _ = fs::create_dir_all(format!("{}\\{}", base, d));
+    }
+    // Extraer/actualizar scripts cuando cambia la version del programa
+    let ver = env!("CARGO_PKG_VERSION");
+    let marker = format!("{}\\Estado\\scripts_version.txt", base);
+    let actual = fs::read_to_string(&marker).unwrap_or_default();
+    if actual.trim() != ver {
+        for (name, content) in SCRIPTS_EMBED {
+            let _ = fs::write(format!("{}\\Scripts\\{}", base, name), content);
+        }
+        let _ = fs::write(&marker, ver);
+    }
+    // Estado inicial
+    let est = format!("{}\\Estado\\estado.json", base);
+    if !Path::new(&est).exists() {
+        let _ = fs::write(&est, "{\"servidor_activo\":false,\"pid_java\":null,\"inicio_sesion\":null,\"ultimo_backup\":null,\"ultima_sincronizacion\":null,\"version_mundo_local\":null,\"turno_actual\":null,\"ultimo_evento\":\"Instalado\",\"ultimo_evento_tiempo\":null}");
+    }
+    let lock = format!("{}\\Estado\\servidor.lock", base);
+    if !Path::new(&lock).exists() {
+        let _ = fs::write(&lock, "");
+    }
 }
 
 // Directorio donde esta el .exe = raiz del proyecto (portable)
@@ -300,9 +332,11 @@ fn ps_elevado(script: String) -> bool {
 // ---------- Reinicio limpio para aplicar el .exe nuevo ----------
 #[tauri::command]
 fn salir_y_actualizar(app: tauri::AppHandle, ruta_base: String) {
-    let exe = format!("{}\\ServidorTecnico.exe", ruta_base);
-    let nuevo = format!("{}\\ServidorTecnico_nuevo.exe", ruta_base);
-    // Espera a que este proceso libere el .exe, lo reemplaza y relanza
+    // Reemplaza el exe actual (cualquier nombre) por el descargado (_update.exe)
+    let exe = std::env::current_exe()
+        .map(|p| p.to_string_lossy().to_string())
+        .unwrap_or_else(|_| format!("{}\\Skeledex.exe", ruta_base));
+    let nuevo = format!("{}\\_update.exe", ruta_base);
     let script = format!(
         "for($i=0;$i -lt 40;$i++){{ Start-Sleep -Milliseconds 700; try{{ Move-Item -LiteralPath '{}' -Destination '{}' -Force -ErrorAction Stop; break }}catch{{}} }}; Start-Process -FilePath '{}'",
         nuevo, exe, exe
@@ -315,6 +349,7 @@ fn salir_y_actualizar(app: tauri::AppHandle, ruta_base: String) {
 }
 
 fn main() {
+    asegurar_estructura();
     tauri::Builder::default()
         .setup(|app| {
             use tauri::menu::{Menu, MenuItem};

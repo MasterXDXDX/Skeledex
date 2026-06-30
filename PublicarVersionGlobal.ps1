@@ -9,7 +9,8 @@ param([string]$Version = "")
 
 $rutaBase    = Split-Path -Parent $MyInvocation.MyCommand.Path
 $rutaScripts = Join-Path $rutaBase "Scripts"
-$exe         = Join-Path $rutaBase "ServidorTecnico.exe"
+$exe         = Join-Path $rutaBase "Skeledex.exe"
+if (-not (Test-Path $exe)) { $exe = Join-Path $rutaBase "ServidorTecnico.exe" }
 
 # Config (en %APPDATA%)
 $archivoCfg = Join-Path $env:APPDATA "Skeledex\config.json"
@@ -32,18 +33,11 @@ Write-Host "  Version actual: $actual  ->  nueva: $Version" -ForegroundColor Cya
 Write-Host "  Repositorio: $repo" -ForegroundColor Cyan
 Write-Host ""
 
-# Empaquetar
-$zip = Join-Path $rutaBase "Skeledex_Update.zip"
-$stage = Join-Path $env:TEMP "skeledex_pub"
-if (Test-Path $stage) { Remove-Item $stage -Recurse -Force }
-New-Item $stage -ItemType Directory | Out-Null
-Copy-Item $rutaScripts (Join-Path $stage "Scripts") -Recurse
-if (Test-Path $exe) { Copy-Item $exe (Join-Path $stage "ServidorTecnico.exe") }
-Set-Content (Join-Path $stage "version.txt") $Version
-if (Test-Path $zip) { Remove-Item $zip -Force }
-Compress-Archive -Path "$stage\*" -DestinationPath $zip -Force
-Remove-Item $stage -Recurse -Force
-Write-Host "  Paquete creado: $zip ($([math]::Round((Get-Item $zip).Length/1MB,1)) MB)" -ForegroundColor Green
+# El asset es el .exe directamente (autocontenido: lleva los scripts dentro)
+if (-not (Test-Path $exe)) { Write-Host "ERROR: no encuentro el .exe ($exe)." -ForegroundColor Red; exit 1 }
+$asset = Join-Path $rutaBase "Skeledex.exe"
+if ($exe -ne $asset) { Copy-Item $exe $asset -Force }
+Write-Host "  Asset: $asset ($([math]::Round((Get-Item $asset).Length/1MB,1)) MB)" -ForegroundColor Green
 
 # Subir la version local del config del developer (para que no se "autoactualice" a si mismo)
 $config.identidad.version_sistema = $Version
@@ -56,7 +50,7 @@ $ghExe = if ($ghCmd) { $ghCmd.Source } elseif (Test-Path "C:\Program Files\GitHu
 $gh = $ghExe
 if ($gh) {
     Write-Host "  Subiendo release v$Version a GitHub con gh..." -ForegroundColor Cyan
-    & $ghExe release create "v$Version" $zip -R $repo -t "Skeledex v$Version" -n "Actualizacion automatica de Skeledex v$Version" --target main 2>&1 | Write-Host
+    & $ghExe release create "v$Version" $asset -R $repo -t "Skeledex v$Version" -n "Actualizacion automatica de Skeledex v$Version" --target main 2>&1 | Write-Host
     if ($LASTEXITCODE -eq 0) {
         Write-Host ""
         Write-Host "  LISTO! Todos los paneles recibiran v$Version al abrirse." -ForegroundColor Green
@@ -70,7 +64,7 @@ if (-not $gh) {
     Write-Host "  ----- PASOS PARA PUBLICAR (una vez) -----" -ForegroundColor Yellow
     Write-Host "  1) Entra a: https://github.com/$repo/releases/new"
     Write-Host "  2) Tag version:  v$Version"
-    Write-Host "  3) Arrastra el archivo:  $zip"
+    Write-Host "  3) Arrastra el archivo:  $asset"
     Write-Host "  4) Publica la release."
     Write-Host ""
     Write-Host "  (Tip: instala GitHub CLI 'gh' una vez y la proxima sera automatica.)" -ForegroundColor Gray

@@ -1589,7 +1589,7 @@ function logoSVG(sz){ return '<svg viewBox="0 0 48 48" style="width:'+sz+'px;hei
 function configBase(){ return {
   _comentario:"Config generada por Skeledex. Se guarda en %APPDATA%\\Skeledex.",
   local:false,
-  identidad:{pc_id:"ST-"+Math.random().toString(16).substring(2,8),nombre_usuario:"",este_pc:"",otro_pc:"",rol:"owner",version_sistema:"1.0.0"},
+  identidad:{pc_id:"ST-"+Math.random().toString(16).substring(2,8),nombre_usuario:"",este_pc:"",otro_pc:"",rol:"owner",version_sistema:"1.0.2"},
   nube:{proveedor:"Backblaze B2",tipo_rclone:"b2",rclone_remoto:"minube",bucket:"",carpeta_mundo:"mundo-activo",carpeta_backups_nube:"backups-nube",archivo_lock:"turno.lock",archivo_estado_nube:"estado-nube.json",limite_gb:10},
   servidor:{java_exe:"java",jar_nombre:"purpur.jar",java_args:"-Xms2G -Xmx4G -XX:+UseG1GC",carpeta_instancia:"Instancia",puerto:25565,rcon_puerto:25575,rcon_password:"Skeledex"+Math.floor(Math.random()*100000),tiempo_espera_inicio_seg:60,tiempo_espera_apagado_seg:120},
   instancias:[{nombre:"Principal",carpeta:"Instancia"}],
