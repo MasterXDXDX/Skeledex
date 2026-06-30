@@ -1,0 +1,44 @@
+{
+    "servidor":  {
+                     "java_exe":  "java",
+                     "java_args":  "-Xms2G -Xmx4G -XX:+UseG1GC",
+                     "tiempo_espera_inicio_seg":  60,
+                     "carpeta_instancia":  "Instancia",
+                     "rcon_password":  "CAMBIAR",
+                     "puerto":  25565,
+                     "jar_nombre":  "purpur.jar",
+                     "rcon_puerto":  25575
+                 },
+    "identidad":  {
+                      "version_sistema":  "1.0.1",
+                      "pc_id":  "",
+                      "rol":  "owner",
+                      "nombre_usuario":  "",
+                      "este_pc":  "",
+                      "otro_pc":  ""
+                  },
+    "discord":  {
+                    "usar":  false,
+                    "webhook_url":  "",
+                    "nombre_bot":  "Skeledex"
+                },
+    "red":  {
+                "metodo":  "playit"
+            },
+    "actualizaciones":  {
+                            "canal":  "github",
+                            "repo":  "MasterXDXDX/Skeledex",
+                            "auto":  true
+                        },
+    "local":  false,
+    "nube":  {
+                 "tipo_rclone":  "b2",
+                 "carpeta_backups_nube":  "backups-nube",
+                 "archivo_lock":  "turno.lock",
+                 "carpeta_mundo":  "mundo-activo",
+                 "limite_gb":  10,
+                 "rclone_remoto":  "minube",
+                 "proveedor":  "Backblaze B2",
+                 "bucket":  ""
+             }
+}

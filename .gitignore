@@ -1,0 +1,15 @@
+# Datos privados y runtime (nunca subir)
+Configuracion/config.json
+Configuracion/config_espana.json
+Estado/
+Registros/
+Instancia/
+Backups/
+*.exe
+*.zip
+jre/
+playit.exe
+# Build
+panel-app/src-tauri/target/
+panel-app/node_modules/
+panel-app/dist/

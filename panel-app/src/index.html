@@ -1,0 +1,1758 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ServidorTecnico</title>
+<style>
+:root{
+  --bg:#0f1014;--sidebar:#16171d;--card:#1d1f27;--card2:#262833;--linea:#2c2e3a;
+  --acento:#5b8cff;--acento2:#7aa2ff;--verde:#35d07f;--rojo:#f0556b;--amarillo:#ffc145;
+  --texto:#fff;--texto2:#a0a6b8;--texto3:#6b7080;--logbg:#0b0c10;
+}
+[data-theme="verde"]{--acento:#22c55e;--acento2:#34d77f;}
+[data-theme="morado"]{--acento:#a855f7;--acento2:#bd77ff;}
+[data-theme="rojo"]{--acento:#ef4444;--acento2:#ff6b6b;}
+[data-theme="claro"]{--bg:#eef1f6;--sidebar:#fff;--card:#f5f7fb;--card2:#e7ebf2;--linea:#dde2ea;--texto:#1a1c24;--texto2:#5a6070;--texto3:#8a90a0;--logbg:#f8fafc;--acento:#3b6eff;}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(--texto);display:flex;flex-direction:column;height:100vh;overflow:hidden;user-select:none;}
+.contenido{flex:1;display:flex;overflow:hidden;}
+/* TITLEBAR */
+.titlebar{height:40px;background:var(--sidebar);border-bottom:1px solid var(--linea);display:flex;align-items:center;justify-content:space-between;padding:0 0 0 14px;flex-shrink:0;}
+.tb-left{display:flex;align-items:center;gap:12px;-webkit-app-region:no-drag;}
+.tb-drag{flex:1;height:100%;-webkit-app-region:drag;}
+.tb-logo{display:flex;align-items:center;gap:7px;color:var(--acento);font-size:14px;font-weight:800;}
+.tb-logo svg{width:18px;height:18px;}
+.logo-img{width:20px;height:20px;object-fit:contain;}
+.logo-img-big{width:24px;height:24px;object-fit:contain;}
+.lg{width:22px!important;height:22px!important;}
+.lg-big{width:26px!important;height:26px!important;}
+.inst-sel{display:flex;align-items:center;gap:6px;background:var(--card);border:1px solid var(--linea);border-radius:8px;padding:5px 10px;cursor:pointer;font-size:12px;color:var(--texto2);}
+.inst-sel:hover{background:var(--card2);color:var(--texto);}
+.inst-sel svg{width:13px;height:13px;}
+.tb-right{display:flex;align-items:center;gap:4px;-webkit-app-region:no-drag;padding-right:6px;}
+.cuenta{display:flex;align-items:center;gap:9px;background:var(--card);border:1px solid var(--linea);border-radius:20px;padding:4px 12px 4px 5px;margin-right:8px;cursor:pointer;transition:all .15s;}
+.cuenta:hover{background:var(--card2);}
+.cuenta-pop{position:absolute;top:46px;right:120px;width:240px;background:var(--card);border:1px solid var(--linea);border-radius:14px;box-shadow:0 12px 32px rgba(0,0,0,.5);padding:16px;z-index:5000;display:none;}
+.cuenta-pop.show{display:block;animation:entra .2s ease;}
+.cp-head{display:flex;align-items:center;gap:11px;margin-bottom:12px;}
+.cp-avatar{width:42px;height:42px;border-radius:50%;background:linear-gradient(135deg,var(--acento),var(--acento2));display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:800;color:#fff;}
+.cp-nombre{font-size:15px;font-weight:700;}
+.cp-rol{font-size:11px;color:var(--texto3);}
+.cp-row{display:flex;justify-content:space-between;font-size:12px;padding:6px 0;border-top:1px solid var(--linea);}
+.cp-row .k{color:var(--texto3);}.cp-row .v{color:var(--texto);font-weight:600;}
+.cp-badge{display:inline-block;padding:2px 8px;border-radius:10px;font-size:10px;font-weight:700;background:var(--acento);color:#fff;}
+.cuenta-avatar{width:26px;height:26px;border-radius:50%;background:linear-gradient(135deg,var(--acento),var(--acento2));display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;color:#fff;}
+.cuenta-info{display:flex;flex-direction:column;line-height:1.2;}
+.cuenta-nombre{font-size:12px;font-weight:700;}
+.cuenta-rol{font-size:9px;color:var(--texto3);text-transform:uppercase;letter-spacing:.5px;}
+.wbtn{width:42px;height:40px;border:none;background:none;color:var(--texto2);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .15s;}
+.wbtn:hover{background:var(--card2);color:var(--texto);}
+.wbtn.cerrar:hover{background:#e03030;color:#fff;}
+.wbtn svg{width:15px;height:15px;}
+svg{width:18px;height:18px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;flex-shrink:0;}
+/* SIDEBAR */
+.sidebar{width:216px;background:var(--sidebar);padding:18px 14px;display:flex;flex-direction:column;border-right:1px solid var(--linea);}
+.logo{display:flex;align-items:center;gap:8px;color:var(--acento);font-size:18px;font-weight:800;margin-bottom:2px;}
+.logo svg{width:22px;height:22px;}
+.user{color:var(--texto2);font-size:11px;margin-bottom:16px;padding-left:2px;}
+.status-card{background:var(--card);border-radius:12px;padding:13px;margin-bottom:16px;border:1px solid var(--linea);}
+.status-row{display:flex;align-items:center;gap:10px;}
+.status-dot{width:11px;height:11px;border-radius:50%;background:var(--rojo);box-shadow:0 0 8px var(--rojo);transition:all .3s;}
+.status-dot.online{background:var(--verde);box-shadow:0 0 8px var(--verde);animation:pulso 2s infinite;}
+.status-dot.loading{background:var(--amarillo);box-shadow:0 0 8px var(--amarillo);}
+@keyframes pulso{0%,100%{opacity:1}50%{opacity:.5}}
+.status-text{font-size:15px;font-weight:700;}
+.status-sub{color:var(--texto2);font-size:10px;margin-top:6px;padding-left:21px;}
+.nav{display:flex;flex-direction:column;gap:2px;margin-bottom:auto;overflow-y:auto;min-height:0;}
+.nav::-webkit-scrollbar{width:4px;}.nav::-webkit-scrollbar-thumb{background:#333;border-radius:2px;}
+.nav-btn{display:flex;align-items:center;gap:10px;background:none;border:none;color:var(--texto2);text-align:left;padding:9px 11px;border-radius:9px;cursor:pointer;font-size:13px;transition:all .15s;font-family:inherit;flex-shrink:0;}
+.nav-btn:hover{background:var(--card);color:var(--texto);}
+.nav-btn.active{background:var(--acento);color:#fff;}
+.btns-control{display:flex;flex-direction:column;gap:7px;margin-top:12px;flex-shrink:0;}
+.btn{display:flex;align-items:center;justify-content:center;gap:8px;border:none;border-radius:9px;padding:11px;color:#fff;font-size:12.5px;font-weight:700;cursor:pointer;transition:all .15s;font-family:inherit;}
+.btn:hover{transform:translateY(-1px);filter:brightness(1.1);}
+.btn:disabled{opacity:.32;cursor:not-allowed;transform:none;filter:none;}
+.btn svg{width:15px;height:15px;}
+.btn-start{background:linear-gradient(135deg,#1ea050,#17c060);}
+.btn-restart{background:linear-gradient(135deg,#c08800,#e0a000);}
+.btn-stop{background:linear-gradient(135deg,#c02020,#e03030);}
+.spin{animation:girar 1s linear infinite;}
+@keyframes girar{to{transform:rotate(360deg)}}
+/* MAIN */
+.main{flex:1;display:flex;flex-direction:column;padding:18px 22px;min-width:0;overflow:hidden;}
+.topbar{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;}
+.view-title{font-size:19px;font-weight:700;display:flex;align-items:center;gap:9px;}
+.view-title svg{width:22px;height:22px;color:var(--acento);}
+.theme-sel{display:flex;gap:6px;}
+.theme-dot{width:20px;height:20px;border-radius:50%;cursor:pointer;border:2px solid transparent;transition:all .15s;}
+.theme-dot:hover{transform:scale(1.15);}
+.theme-dot.sel{border-color:var(--texto);}
+.view{display:none;flex:1;flex-direction:column;min-height:0;}
+.view.active{display:flex;}
+/* DASHBOARD */
+.cards-row{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin-bottom:14px;}
+.mini-card{background:var(--card);border-radius:12px;padding:13px;border:1px solid var(--linea);}
+.mc-top{display:flex;align-items:center;gap:6px;color:var(--texto3);font-size:9px;text-transform:uppercase;letter-spacing:.8px;font-weight:600;}
+.mc-top svg{width:13px;height:13px;}
+.mc-value{font-size:20px;font-weight:700;margin-top:5px;}
+.info-row{display:flex;gap:12px;margin-bottom:14px;}
+.info-box{flex:1;background:var(--card);border-radius:12px;padding:14px;border:1px solid var(--linea);}
+.ib-label{display:flex;align-items:center;gap:6px;color:var(--texto3);font-size:9px;text-transform:uppercase;letter-spacing:1px;font-weight:600;margin-bottom:8px;}
+.ib-label svg{width:13px;height:13px;}
+.ib-value{font-size:14px;font-weight:600;cursor:pointer;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.ib-value:hover{color:var(--acento);}
+.health{display:flex;gap:18px;}
+.health-item{display:flex;align-items:center;gap:7px;font-size:12px;color:var(--texto2);}
+.hdot{width:9px;height:9px;border-radius:50%;background:var(--texto3);}
+.hdot.ok{background:var(--verde);}.hdot.fail{background:var(--rojo);}
+/* LOG */
+.log{flex:1;background:var(--logbg);border-radius:12px;padding:14px 16px;font-family:'Cascadia Code','Consolas',monospace;font-size:12px;line-height:1.65;overflow-y:auto;color:var(--texto2);border:1px solid var(--linea);}
+.log::-webkit-scrollbar{width:6px;}.log::-webkit-scrollbar-thumb{background:#333;border-radius:3px;}
+.log-ok{color:var(--verde);}.log-error{color:var(--rojo);}.log-warn{color:var(--amarillo);}
+.log-system{color:var(--acento);}.log-cmd{color:#b482ff;font-weight:600;}.log-resp{color:var(--texto);}
+.cmd-row{display:flex;gap:10px;margin-top:12px;}
+.cmd-input{flex:1;background:var(--card);border:1px solid var(--linea);border-radius:10px;padding:10px 14px;color:var(--texto);font-family:'Cascadia Code','Consolas',monospace;font-size:13px;outline:none;}
+.cmd-input:focus{border-color:var(--acento);}
+.btn-send{display:flex;align-items:center;justify-content:center;background:var(--acento);border:none;border-radius:10px;padding:10px 16px;color:#fff;cursor:pointer;}
+/* LISTAS */
+.lista{flex:1;overflow-y:auto;}
+.lista::-webkit-scrollbar{width:6px;}.lista::-webkit-scrollbar-thumb{background:#333;border-radius:3px;}
+.item{background:var(--card);border-radius:10px;padding:12px 14px;margin-bottom:8px;display:flex;justify-content:space-between;align-items:center;border:1px solid var(--linea);}
+.item-info{font-size:13px;display:flex;align-items:center;gap:8px;}
+.item-sub{color:var(--texto3);font-size:11px;margin-top:3px;}
+.item-btns{display:flex;gap:6px;}
+.mini-btn{border:none;border-radius:7px;padding:6px 12px;background:var(--acento);color:#fff;font-size:11px;font-weight:600;cursor:pointer;font-family:inherit;}
+.mb-op{background:#3b82c4;}.mb-kick{background:#c08800;}.mb-ban{background:#c02020;}
+/* CONFIG / AJUSTES */
+.scroll{overflow-y:auto;flex:1;padding-right:6px;}
+.scroll::-webkit-scrollbar{width:7px;}.scroll::-webkit-scrollbar-thumb{background:#333;border-radius:3px;}
+.cfg-card{background:var(--card);border:1px solid var(--linea);border-radius:14px;padding:18px;margin-bottom:14px;}
+.cfg-card-head{display:flex;align-items:center;gap:10px;margin-bottom:4px;}
+.cfg-card-head svg{width:18px;height:18px;color:var(--acento);}
+.cfg-card-title{font-size:15px;font-weight:700;}
+.cfg-card-desc{color:var(--texto3);font-size:11.5px;margin-bottom:14px;line-height:1.5;}
+.field{margin-bottom:13px;}
+.field:last-child{margin-bottom:0;}
+.field label{display:block;color:var(--texto);font-size:12.5px;font-weight:600;margin-bottom:3px;}
+.field .hint{color:var(--texto3);font-size:11px;margin-bottom:6px;line-height:1.4;}
+.field input,.field select{width:100%;background:var(--card2);border:1px solid var(--linea);border-radius:8px;padding:9px 12px;color:var(--texto);font-size:13px;outline:none;font-family:inherit;}
+.field input:focus,.field select:focus{border-color:var(--acento);}
+.act-btn{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;border:none;border-radius:10px;padding:13px;background:var(--acento);color:#fff;font-size:13px;font-weight:700;cursor:pointer;margin-top:4px;font-family:inherit;transition:all .15s;}
+.act-btn:hover{filter:brightness(1.1);}
+.act-save{background:linear-gradient(135deg,#1ea050,#17c060);}
+.act-purpur{background:linear-gradient(135deg,#6a3cb0,#8050d0);}
+.act-paper{background:linear-gradient(135deg,#2a8030,#38a040);}
+.msg{margin-top:10px;font-size:12px;min-height:16px;}
+.subt{font-size:13px;font-weight:700;margin:14px 0 10px;color:var(--texto2);display:flex;align-items:center;gap:7px;}
+.banner{background:var(--card2);border-left:3px solid var(--acento);border-radius:8px;padding:10px 12px;font-size:11.5px;color:var(--texto2);line-height:1.5;margin-bottom:12px;}
+/* TOASTS */
+#toasts{position:fixed;bottom:20px;right:20px;display:flex;flex-direction:column;gap:10px;z-index:9999;}
+.toast{display:flex;align-items:center;gap:10px;background:var(--card);border:1px solid var(--linea);border-left:4px solid var(--acento);border-radius:10px;padding:12px 16px;font-size:13px;color:var(--texto);box-shadow:0 8px 24px rgba(0,0,0,.4);min-width:240px;animation:entra .25s ease;}
+.toast.ok{border-left-color:var(--verde);}.toast.error{border-left-color:var(--rojo);}.toast.info{border-left-color:var(--acento);}
+.toast svg{width:18px;height:18px;}
+.toast.ok svg{color:var(--verde);}.toast.error svg{color:var(--rojo);}.toast.info svg{color:var(--acento);}
+@keyframes entra{from{transform:translateX(40px);opacity:0}to{transform:translateX(0);opacity:1}}
+.fade-out{animation:sale .3s ease forwards;}
+@keyframes sale{to{transform:translateX(40px);opacity:0}}
+/* TOGGLE SWITCH */
+.tog-row{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:13px;}
+.tog-txt label{display:block;color:var(--texto);font-size:12.5px;font-weight:600;}
+.tog-txt .hint{color:var(--texto3);font-size:11px;margin-top:2px;line-height:1.4;}
+.switch{position:relative;display:inline-block;width:46px;height:26px;flex-shrink:0;}
+.switch input{opacity:0;width:0;height:0;}
+.slider-sw{position:absolute;cursor:pointer;inset:0;background:var(--card2);border:1px solid var(--linea);border-radius:26px;transition:.25s;}
+.slider-sw:before{content:"";position:absolute;height:18px;width:18px;left:3px;top:3px;background:#fff;border-radius:50%;transition:.25s;box-shadow:0 1px 3px rgba(0,0,0,.3);}
+.switch input:checked+.slider-sw{background:var(--acento);border-color:var(--acento);}
+.switch input:checked+.slider-sw:before{transform:translateX(20px);}
+/* SLIDER RANGE */
+.rng-row{margin-bottom:13px;}
+.rng-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;}
+.rng-head label{color:var(--texto);font-size:12.5px;font-weight:600;}
+.rng-val{color:var(--acento);font-size:13px;font-weight:700;}
+input[type=range]{width:100%;height:6px;border-radius:5px;background:var(--card2);outline:none;-webkit-appearance:none;appearance:none;}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:18px;height:18px;border-radius:50%;background:var(--acento);cursor:pointer;border:2px solid var(--sidebar);}
+.view{animation:fadeIn .25s ease;}
+@keyframes fadeIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+@media(max-width:820px){ .cards-row{grid-template-columns:repeat(3,1fr);} .sidebar{width:180px;} .info-row{flex-direction:column;} }
+@media(max-width:640px){ .cards-row{grid-template-columns:repeat(2,1fr);} .cuenta-info{display:none;} }
+button:focus-visible,input:focus-visible,select:focus-visible,.nav-btn:focus-visible,.theme-dot:focus-visible,[onclick]:focus-visible{ outline:2px solid var(--acento); outline-offset:2px; }
+.fab-save{position:fixed;right:26px;bottom:26px;z-index:600;display:flex;align-items:center;gap:8px;border:none;border-radius:30px;padding:13px 22px;background:linear-gradient(135deg,#1ea050,#17c060);color:#fff;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit;box-shadow:0 8px 26px rgba(0,0,0,.35);animation:fabIn .25s ease;}
+.fab-save:hover{filter:brightness(1.08);}
+@keyframes fabIn{from{opacity:0;transform:translateY(14px) scale(.95);}to{opacity:1;transform:none;}}
+.item:empty::after,.lista:empty::after{ content:""; }
+kbd{font-family:monospace;}
+</style>
+</head>
+<body data-theme="azul">
+<div class="titlebar">
+  <div class="tb-left">
+    <div class="tb-logo"><svg viewBox="0 0 48 48" class="lg"><polygon points="42,24 33,39.6 15,39.6 6,24 15,8.4 33,8.4" fill="none" stroke="var(--acento)" stroke-width="3.5" stroke-linejoin="round"/><polygon points="33,24 28.5,31.8 19.5,31.8 15,24 19.5,16.2 28.5,16.2" fill="var(--verde)"/><circle cx="42" cy="24" r="3.5" fill="var(--acento)"/><circle cx="6" cy="24" r="3.5" fill="var(--acento)"/><circle cx="15" cy="39.6" r="3.5" fill="var(--acento)"/><circle cx="33" cy="39.6" r="3.5" fill="var(--acento)"/><circle cx="15" cy="8.4" r="3.5" fill="var(--acento)"/><circle cx="33" cy="8.4" r="3.5" fill="var(--amarillo)"/></svg> Skeledex</div>
+    <div class="inst-sel" id="instSel" onclick="abrirInstancias()"></div>
+  </div>
+  <div class="tb-drag" data-tauri-drag-region></div>
+  <div class="tb-right">
+    <div class="cuenta" onclick="toggleCuenta()">
+      <div class="cuenta-avatar" id="cuentaAvatar">?</div>
+      <div class="cuenta-info"><span class="cuenta-nombre" id="cuentaNombre">--</span><span class="cuenta-rol" id="cuentaRol">--</span></div>
+    </div>
+    <div class="cuenta-pop" id="cuentaPop"></div>
+    <button class="wbtn" onclick="winMin()" title="Minimizar" aria-label="Minimizar"><svg viewBox="0 0 24 24"><line x1="5" y1="12" x2="19" y2="12"/></svg></button>
+    <button class="wbtn" onclick="winMax()" title="Maximizar" aria-label="Maximizar"><svg viewBox="0 0 24 24"><rect x="5" y="5" width="14" height="14" rx="1"/></svg></button>
+    <button class="wbtn cerrar" onclick="winClose()" title="Cerrar" aria-label="Cerrar"><svg viewBox="0 0 24 24"><line x1="6" y1="6" x2="18" y2="18"/><line x1="18" y1="6" x2="6" y2="18"/></svg></button>
+  </div>
+</div>
+<div class="contenido">
+<div class="sidebar">
+  <div class="logo"><svg viewBox="0 0 48 48" class="lg-big"><polygon points="42,24 33,39.6 15,39.6 6,24 15,8.4 33,8.4" fill="none" stroke="var(--acento)" stroke-width="3.5" stroke-linejoin="round"/><polygon points="33,24 28.5,31.8 19.5,31.8 15,24 19.5,16.2 28.5,16.2" fill="var(--verde)"/><circle cx="42" cy="24" r="3.5" fill="var(--acento)"/><circle cx="6" cy="24" r="3.5" fill="var(--acento)"/><circle cx="15" cy="39.6" r="3.5" fill="var(--acento)"/><circle cx="33" cy="39.6" r="3.5" fill="var(--acento)"/><circle cx="15" cy="8.4" r="3.5" fill="var(--acento)"/><circle cx="33" cy="8.4" r="3.5" fill="var(--amarillo)"/></svg> Skeledex</div>
+  <div class="user" id="userInfo">...</div>
+  <div class="status-card">
+    <div class="status-row"><div class="status-dot" id="statusDot"></div><span class="status-text" id="statusText">CARGANDO</span></div>
+    <div class="status-sub" id="statusSub"></div>
+  </div>
+  <div class="nav" id="navMenu"></div>
+  <div class="btns-control">
+    <button class="btn btn-start" id="btnStart" onclick="accion('iniciar')"></button>
+    <button class="btn btn-restart" id="btnRestart" onclick="accion('reiniciar')"></button>
+    <button class="btn btn-stop" id="btnStop" onclick="accion('apagar')"></button>
+  </div>
+</div>
+
+<div class="main">
+  <div class="topbar">
+    <span class="view-title" id="viewTitle"></span>
+    <button class="mini-btn" id="btnIdioma" title="Idioma / Language" aria-label="Cambiar idioma" onclick="cambiarIdioma()" style="background:var(--card2);color:var(--texto);margin-left:auto;margin-right:8px;font-weight:700;">ES</button>
+    <button class="mini-btn" id="btnNotif" title="Notificaciones" aria-label="Notificaciones" onclick="abrirNotificaciones()" style="background:var(--card2);color:var(--texto);margin-right:8px;display:flex;align-items:center;"></button>
+    <div class="theme-sel">
+      <div class="theme-dot sel" style="background:#5b8cff" data-theme="azul" onclick="setTema('azul')"></div>
+      <div class="theme-dot" style="background:#22c55e" data-theme="verde" onclick="setTema('verde')"></div>
+      <div class="theme-dot" style="background:#a855f7" data-theme="morado" onclick="setTema('morado')"></div>
+      <div class="theme-dot" style="background:#ef4444" data-theme="rojo" onclick="setTema('rojo')"></div>
+      <div class="theme-dot" style="background:#dde2ea" data-theme="claro" onclick="setTema('claro')"></div>
+      <input type="color" id="colorPick" value="#5b8cff" title="Color personalizado" oninput="setAccento(this.value)" style="width:22px;height:22px;border:none;background:none;padding:0;cursor:pointer;border-radius:50%;">
+    </div>
+  </div>
+
+  <!-- DASHBOARD -->
+  <div class="view active" id="view-dashboard">
+    <div class="cards-row" id="cardsRow"></div>
+    <div id="checklist"></div>
+    <div class="info-row">
+      <div class="info-box"><div class="ib-label" id="lblVer"></div><div class="ib-value" id="version">--</div></div>
+      <div class="info-box"><div class="ib-label" id="lblIp"></div><div class="ib-value" id="ipAddr" onclick="copiarIP()">--</div></div>
+    </div>
+    <button class="act-btn" style="background:var(--acento);color:#fff;margin-bottom:12px;" onclick="compartir()" id="btnCompartir">Compartir con amigos</button>
+    <div class="info-box">
+      <div class="ib-label" id="lblSalud"></div>
+      <div class="health" style="margin-top:8px;">
+        <div class="health-item"><span class="hdot" id="hDisco"></span><span id="hDiscoT">Disco: --</span></div>
+        <div class="health-item"><span class="hdot" id="hNet"></span><span>Internet</span></div>
+        <div class="health-item"><span class="hdot" id="hServer"></span><span>Servidor</span></div>
+        <div class="health-item"><span class="hdot" id="hJava"></span><span id="hJavaT">Java</span></div>
+        <div class="health-item"><span class="hdot" id="hNube"></span><span>Nube</span></div>
+        <div class="health-item"><span class="hdot" id="hRam"></span><span id="hRamT">RAM libre</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- CONSOLA -->
+  <div class="view" id="view-consola">
+    <div style="display:flex;gap:8px;margin-bottom:10px;">
+      <input class="cmd-input" id="logSearch" placeholder="Buscar en el log..." oninput="filtrarLog()" style="flex:1;">
+      <button class="mini-btn" style="background:var(--card2);color:var(--texto);" onclick="copiarLog()">Copiar</button>
+      <button class="mini-btn" style="background:var(--card2);color:var(--texto);" onclick="limpiarLog()">Limpiar</button>
+      <button class="mini-btn" style="background:var(--card2);color:var(--texto);" onclick="analizarCrash()">Diagnostico</button>
+    </div>
+    <div class="log" id="logArea"></div>
+    <div class="cmd-row" id="cmdRow">
+      <input class="cmd-input" id="cmdInput" placeholder="Escribe un comando de Minecraft..." onkeydown="if(event.key==='Enter')enviarCmd()">
+      <button class="btn-send" onclick="enviarCmd()" id="btnSend" aria-label="Enviar comando"></button>
+    </div>
+  </div>
+
+  <!-- JUGADORES -->
+  <div class="view" id="view-jugadores">
+    <div class="cfg-card">
+      <div class="field"><label>Nombre del jugador</label><input class="cmd-input" id="playerName" placeholder="Escribe un nombre"></div>
+      <div class="item-btns">
+        <button class="mini-btn mb-op" onclick="accionJugador('op')">Dar OP</button>
+        <button class="mini-btn" style="background:#666" onclick="accionJugador('deop')">Quitar OP</button>
+        <button class="mini-btn mb-kick" onclick="accionJugador('kick')">Expulsar</button>
+        <button class="mini-btn mb-ban" onclick="accionJugador('ban')">Banear</button>
+        <button class="mini-btn" style="background:#666" onclick="accionJugador('pardon')">Desbanear</button>
+        <button class="mini-btn" style="background:var(--verde)" onclick="accionJugador('whitelist add')">+ Whitelist</button>
+        <button class="mini-btn" style="background:#666" onclick="accionJugador('whitelist remove')">- Whitelist</button>
+      </div>
+    </div>
+    <div class="cfg-card">
+      <div class="cfg-card-head"><span class="cfg-card-title">Mensaje al chat</span></div>
+      <div style="display:flex;gap:8px;">
+        <input class="cmd-input" id="chatMsg" placeholder="Escribe un mensaje para todos..." style="flex:1;" onkeydown="if(event.key==='Enter')decirChat()">
+        <button class="mini-btn" style="background:var(--acento);color:#fff;" onclick="decirChat()">Enviar</button>
+      </div>
+      <div class="item-btns" style="margin-top:8px;">
+        <button class="mini-btn" style="background:var(--card2);color:var(--texto);" onclick="reiniciarConAviso()">Reiniciar con aviso (60s)</button>
+      </div>
+      <div style="margin-top:10px;display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+        <input class="cmd-input" id="anunRecTexto" placeholder="Anuncio automatico recurrente..." style="flex:1;min-width:160px;">
+        <input class="cmd-input" id="anunRecMin" type="number" min="1" max="240" value="15" style="width:70px;" title="Cada cuantos minutos">
+        <button class="mini-btn" id="btnAnunRec" style="background:var(--card2);color:var(--texto);" onclick="toggleAnuncioRec()">Activar</button>
+      </div>
+      <div class="msg" id="msgChat"></div>
+    </div>
+    <div class="subt" id="subtConectados"></div>
+    <div class="lista" id="listaJugadores"><div style="color:var(--texto3);font-size:12px;">Cargando...</div></div>
+  </div>
+
+  <!-- BACKUPS -->
+  <div class="view" id="view-backups">
+    <div class="banner">Cada copia es una foto del mundo en ese momento. Se crean automaticamente antes de iniciar, despues de apagar y cada dia.</div>
+    <div style="display:flex;gap:8px;margin-bottom:10px;">
+      <button class="mini-btn" style="background:var(--acento);color:#fff;" onclick="crearBackupAhora()">Crear backup ahora</button>
+      <button class="mini-btn" style="background:var(--card2);color:var(--texto);" onclick="abrirCarpeta(carpInst()+'\\Backups')">Abrir carpeta de backups</button>
+      <button class="mini-btn" style="background:var(--card2);color:var(--texto);" onclick="abrirCarpeta(carpInst()+'\\logs')">Abrir carpeta de logs</button>
+    </div>
+    <div class="lista" id="listaBackups"><div style="color:var(--texto3);font-size:12px;">Cargando...</div></div>
+  </div>
+
+  <!-- MUNDO -->
+  <div class="view" id="view-config">
+    <div class="scroll">
+      <div class="cfg-card">
+        <div class="cfg-card-head" id="hMundo"></div>
+        <div class="cfg-card-desc">Ajustes del juego. Se aplican al reiniciar el servidor.</div>
+        <div id="propsContainer"></div>
+        <div id="motdPreviewWrap" style="display:none;margin:4px 0 10px;">
+          <div class="item-sub" style="margin-bottom:4px;">Vista previa del MOTD:</div>
+          <div id="motdPreview" style="background:#1a1a1a;padding:10px;border-radius:8px;font-family:monospace;font-size:13px;line-height:1.4;"></div>
+          <div class="item-btns" style="margin-top:6px;">
+            <button class="mini-btn" style="background:#555;color:#fff;" onclick="insertarColorMotd('§a')">Verde</button>
+            <button class="mini-btn" style="background:#555;color:#fff;" onclick="insertarColorMotd('§b')">Cyan</button>
+            <button class="mini-btn" style="background:#555;color:#fff;" onclick="insertarColorMotd('§e')">Amarillo</button>
+            <button class="mini-btn" style="background:#555;color:#fff;" onclick="insertarColorMotd('§c')">Rojo</button>
+            <button class="mini-btn" style="background:#555;color:#fff;" onclick="insertarColorMotd('§d')">Rosa</button>
+            <button class="mini-btn" style="background:#555;color:#fff;" onclick="insertarColorMotd('§l')">Negrita</button>
+            <button class="mini-btn" style="background:#555;color:#fff;" onclick="insertarColorMotd('§r')">Reset</button>
+          </div>
+        </div>
+        <button class="act-btn act-save" onclick="guardarProps()" id="btnGuardarProps"></button>
+        <div class="msg" id="msgServidor"></div>
+        <div class="subt" style="cursor:pointer;" onclick="toggleAvanzado()" id="subtAvanzado"></div>
+        <input id="propsBuscar" placeholder="Buscar propiedad..." oninput="filtrarProps()" style="display:none;width:100%;margin:6px 0;" aria-label="Buscar propiedad">
+        <div id="propsAvanzado" style="display:none;"></div>
+        <button class="act-btn act-save" id="btnGuardarAv" onclick="guardarAvanzado()" style="display:none;">Guardar avanzado</button>
+        <div class="msg" id="msgAvanzado"></div>
+      </div>
+      <div class="cfg-card">
+        <div class="cfg-card-head" id="hMotor"></div>
+        <div class="cfg-card-desc" id="motorActual"></div>
+        <button class="act-btn act-save" onclick="prepararServidor()" style="margin-bottom:6px;">Preparar servidor (Purpur + EULA + RCON)</button>
+        <button class="act-btn" style="background:var(--card2);color:var(--texto);margin-bottom:6px;" onclick="generarServerIcon()">Usar icono de Skeledex (server-icon.png)</button>
+        <div id="motorMgr"></div>
+        <div class="msg" id="msgMotor"></div>
+      </div>
+    </div>
+    <button id="fabGuardarProps" class="fab-save" onclick="guardarProps()" style="display:none;">Guardar cambios</button>
+  </div>
+
+  <!-- AJUSTES -->
+  <div class="view" id="view-ajustes">
+    <div class="scroll" id="ajustesScroll"></div>
+    <button id="fabGuardar" class="fab-save" onclick="guardarAjustes()" style="display:none;">Guardar cambios</button>
+  </div>
+
+  <!-- EQUIPO -->
+  <div class="view" id="view-equipo">
+    <div class="scroll" id="equipoScroll"></div>
+  </div>
+
+  <!-- STATS -->
+  <div class="view" id="view-stats">
+    <div class="scroll" id="statsScroll"></div>
+  </div>
+
+  <!-- PLUGINS -->
+  <div class="view" id="view-plugins">
+    <div class="scroll" id="pluginsScroll"></div>
+  </div>
+</div>
+</div>
+
+<div id="toasts"></div>
+
+<script>
+// ===== ICONOS SVG =====
+var ICONS = {
+  dashboard:'<path d="M3 13h8V3H3zM13 21h8V3h-8zM3 21h8v-6H3z"/>',
+  consola:'<rect x="3" y="4" width="18" height="16" rx="2"/><path d="M7 9l3 3-3 3M13 15h4"/>',
+  jugadores:'<path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/>',
+  backups:'<ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5M3 12c0 1.66 4 3 9 3s9-1.34 9-3"/>',
+  mundo:'<circle cx="12" cy="12" r="10"/><path d="M2 12h20M12 2a15 15 0 0 1 0 20 15 15 0 0 1 0-20"/>',
+  ajustes:'<circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>',
+  equipo:'<path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/>',
+  play:'<polygon points="5 3 19 12 5 21 5 3"/>',
+  restart:'<path d="M23 4v6h-6M1 20v-6h6"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/>',
+  stop:'<rect x="5" y="5" width="14" height="14" rx="2"/>',
+  send:'<line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/>',
+  players:'<path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/>',
+  tps:'<polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>',
+  ram:'<rect x="2" y="7" width="20" height="10" rx="2"/><path d="M6 7V5M10 7V5M14 7V5M18 7V5M6 21v-4M18 21v-4"/>',
+  clock:'<circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>',
+  save:'<path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/>',
+  tag:'<path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/>',
+  globe:'<circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15 15 0 0 1 0 20 15 15 0 0 1 0-20z"/>',
+  heart:'<path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>',
+  download:'<path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/>',
+  check:'<poleline points="20 6 9 17 4 12"/><polyline points="20 6 9 17 4 12"/>',
+  alert:'<path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>',
+  info:'<circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/>',
+  id:'<rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="9" cy="10" r="2"/><path d="M15 8h4M15 12h4M7 16h10"/>',
+  server:'<rect x="2" y="2" width="20" height="8" rx="2"/><rect x="2" y="14" width="20" height="8" rx="2"/><line x1="6" y1="6" x2="6.01" y2="6"/><line x1="6" y1="18" x2="6.01" y2="18"/>',
+  discord:'<circle cx="9" cy="12" r="1"/><circle cx="15" cy="12" r="1"/><path d="M7.5 7.5c3-1 6-1 9 0M7.5 16.5c3 1 6 1 9 0M8 7.5L7 5M16 7.5L17 5M8 16.5l-2 2.5M16 16.5l2 2.5"/>',
+  net:'<path d="M5 12.55a11 11 0 0 1 14.08 0M1.42 9a16 16 0 0 1 21.16 0M8.53 16.11a6 6 0 0 1 6.95 0M12 20h.01"/>',
+  sliders:'<line x1="4" y1="21" x2="4" y2="14"/><line x1="4" y1="10" x2="4" y2="3"/><line x1="12" y1="21" x2="12" y2="12"/><line x1="12" y1="8" x2="12" y2="3"/><line x1="20" y1="21" x2="20" y2="16"/><line x1="20" y1="12" x2="20" y2="3"/><line x1="1" y1="14" x2="7" y2="14"/><line x1="9" y1="8" x2="15" y2="8"/><line x1="17" y1="16" x2="23" y2="16"/>',
+  crown:'<path d="M2 18h20l-2-9-4 4-4-7-4 7-4-4-2 9z"/>',
+  tools:'<path d="M14.7 6.3a4 4 0 0 0-5.6 5.6L3 18v3h3l6.1-6.1a4 4 0 0 0 5.6-5.6l-2.1 2.1-2-2 2.1-2.1z"/>',
+  upload:'<path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/>',
+  trash:'<polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>',
+  plugin:'<path d="M4 7h3V4a2 2 0 0 1 4 0v3h3a2 2 0 0 1 2 2v3h3a2 2 0 0 1 0 4h-3v3a2 2 0 0 1-2 2h-3v-3a2 2 0 0 0-4 0v3H4a0 0 0 0 1 0 0v-7H4z"/>',
+  bell:'<path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/>',
+  map:'<polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6"/><line x1="8" y1="2" x2="8" y2="18"/><line x1="16" y1="6" x2="16" y2="22"/>',
+  search:'<circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>'
+};
+function ico(n){ return '<svg viewBox="0 0 24 24">'+(ICONS[n]||'')+'</svg>'; }
+// ===== i18n (ES por defecto, EN opcional) =====
+var IDIOMA = localStorage.getItem("idioma") || "es";
+var I18N = {
+  es:{ dashboard:"Dashboard",consola:"Consola",jugadores:"Jugadores",backups:"Backups",stats:"Stats",mundo:"Mundo",config:"Mundo",plugins:"Plugins",ajustes:"Ajustes",equipo:"Equipo",
+    iniciar:"Iniciar",reiniciar:"Reiniciar",apagar:"Apagar",
+    t_dashboard:"Dashboard",t_consola:"Consola en vivo",t_jugadores:"Jugadores",t_backups:"Backups",t_stats:"Estadisticas",t_config:"Mundo y Motor",t_plugins:"Plugins",t_ajustes:"Ajustes",t_equipo:"Equipo y Roles" },
+  en:{ dashboard:"Dashboard",consola:"Console",jugadores:"Players",backups:"Backups",stats:"Stats",mundo:"World",config:"World",plugins:"Plugins",ajustes:"Settings",equipo:"Team",
+    iniciar:"Start",reiniciar:"Restart",apagar:"Stop",
+    t_dashboard:"Dashboard",t_consola:"Live console",t_jugadores:"Players",t_backups:"Backups",t_stats:"Statistics",t_config:"World & Engine",t_plugins:"Plugins",t_ajustes:"Settings",t_equipo:"Team & Roles" }
+};
+function t(k){ var d=I18N[IDIOMA]||I18N.es; return d[k]||I18N.es[k]||k; }
+function cambiarIdioma(){ IDIOMA=(IDIOMA==="es")?"en":"es"; localStorage.setItem("idioma",IDIOMA); construirUI(); aplicarRol(); var lb=document.getElementById("btnIdioma"); if(lb) lb.textContent=IDIOMA.toUpperCase(); var act=document.querySelector(".nav-btn.active"); irVista(act?act.getAttribute("data-view"):"dashboard"); }
+
+// ===== TOASTS =====
+function toast(msg, tipo){
+  tipo = tipo || "info";
+  var t = document.createElement("div"); t.className = "toast "+tipo;
+  var icon = tipo==="ok"?"check":tipo==="error"?"alert":"info";
+  // 'check' icon fix
+  t.innerHTML = '<svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg><span>'+msg+'</span>';
+  if(tipo==="error") t.innerHTML = ico("alert")+'<span>'+msg+'</span>';
+  if(tipo==="info") t.innerHTML = ico("info")+'<span>'+msg+'</span>';
+  document.getElementById("toasts").appendChild(t);
+  setTimeout(function(){ t.className+=" fade-out"; setTimeout(function(){ t.remove(); },300); }, 3200);
+}
+
+var invoke=null;
+function dbg(m){ if(invoke){ try{ invoke("escribir_debug",{texto:new Date().toISOString()+" | "+m}); }catch(e){} } }
+var RUTA_BASE="C:\\ServidorTecnico", RUTA_SCRIPTS="", RUTA_ESTADO="", RUTA_CONFIG="", RUTA_REGISTROS="", RUTA_REGSIS="", ARCHIVO_CONFIG="", RUTA_APPDATA="";
+function setRutas(base){ RUTA_BASE=base; RUTA_SCRIPTS=base+"\\Scripts"; RUTA_ESTADO=base+"\\Estado"; RUTA_CONFIG=base+"\\Configuracion"; RUTA_REGISTROS=base+"\\Instancia\\logs"; RUTA_REGSIS=base+"\\Registros"; }
+function rutaInst(){ return RUTA_BASE+"\\"+((config&&config.servidor&&config.servidor.carpeta_instancia)||"Instancia"); }
+setRutas("C:\\ServidorTecnico");
+var config={}, ciclo=0, ipActual="";
+var prevOnline=null, progInterval=null;
+function notificar(titulo,cuerpo){
+  try{
+    if(window.Notification){
+      if(Notification.permission==="granted"){ new Notification(titulo,{body:cuerpo}); }
+      else if(Notification.permission!=="denied"){ Notification.requestPermission().then(function(p){ if(p==="granted") new Notification(titulo,{body:cuerpo}); }); }
+    }
+  }catch(e){}
+  toast(titulo+" — "+cuerpo,"ok");
+}
+
+// ===== CONTROLES DE VENTANA (frameless) =====
+function winApi(){ try{ return window.__TAURI__.window.getCurrentWindow(); }catch(e){ return null; } }
+function winMin(){ var w=winApi(); if(w) w.minimize(); }
+function winMax(){ var w=winApi(); if(w) w.toggleMaximize(); }
+function winClose(){ var w=winApi(); if(w) w.close(); }
+
+// ===== WIDGET DE CUENTA =====
+function actualizarCuenta(){
+  if(!config.identidad) return;
+  var nom=config.identidad.nombre_usuario||"?";
+  document.getElementById("cuentaNombre").textContent=nom;
+  document.getElementById("cuentaRol").textContent=(config.identidad.rol||"")+" · "+(config.identidad.este_pc||"");
+  document.getElementById("cuentaAvatar").textContent=nom.charAt(0).toUpperCase();
+}
+function copiarId(){ var i=config.identidad?config.identidad.pc_id:""; if(i){ try{ navigator.clipboard.writeText(i); }catch(e){} toast("Tu ID copiado: "+i,"ok"); } }
+function toggleCuenta(){
+  var pop=document.getElementById("cuentaPop");
+  if(pop.className.indexOf("show")>=0){ pop.className="cuenta-pop"; return; }
+  var id=config.identidad||{};
+  var nom=id.nombre_usuario||"?";
+  var h='<div class="cp-head"><div class="cp-avatar">'+nom.charAt(0).toUpperCase()+'</div><div><div class="cp-nombre">'+nom+'</div><div class="cp-rol"><span class="cp-badge">'+(id.rol||"")+'</span></div></div></div>';
+  h+='<div class="cp-row"><span class="k">Tu ID</span><span class="v" id="popId" onclick="copiarId()" style="cursor:pointer;color:var(--acento);">'+(id.pc_id||"--")+'</span></div>';
+  h+='<div class="cp-row"><span class="k">PC</span><span class="v">'+(id.este_pc||"--")+'</span></div>';
+  h+='<div class="cp-row"><span class="k">Otro PC</span><span class="v">'+(id.otro_pc||"--")+'</span></div>';
+  h+='<div class="cp-row"><span class="k">Instancia</span><span class="v">'+nombreInstanciaActual()+'</span></div>';
+  h+='<div class="cp-row"><span class="k">Direccion</span><span class="v" style="max-width:130px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">'+(ipActual||"--")+'</span></div>';
+  if(id.rol!=="miembro"){ h+='<div class="cp-row" style="border:none;padding-top:10px;"><button class="mini-btn" style="background:var(--acento);width:100%;" onclick="irVista(\'ajustes\');toggleCuenta();">Editar mi cuenta</button></div>'; }
+  pop.innerHTML=h; pop.className="cuenta-pop show";
+}
+document.addEventListener("click",function(e){
+  var pop=document.getElementById("cuentaPop"); if(!pop) return;
+  if(pop.className.indexOf("show")>=0){ var c=e.target.closest&&e.target.closest(".cuenta"); if(!c && !e.target.closest(".cuenta-pop")) pop.className="cuenta-pop"; }
+});
+
+// ===== SELECTOR DE INSTANCIAS =====
+function nombreInstanciaActual(){
+  var c=(config.servidor&&config.servidor.carpeta_instancia)?config.servidor.carpeta_instancia:"Instancia";
+  if(config.instancias){ for(var i=0;i<config.instancias.length;i++){ if(config.instancias[i].carpeta===c) return config.instancias[i].nombre; } }
+  return c;
+}
+function actualizarInstSel(){
+  var el=document.getElementById("instSel");
+  if(el) el.innerHTML=ico("mundo")+" <span>"+nombreInstanciaActual()+"</span>";
+}
+async function abrirInstancias(){
+  abrirGestorInstancias();
+}
+async function abrirNotificaciones(){
+  var h='<div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;">'+ico("bell")+'<h2 style="margin:0;font-size:17px;">Centro de notificaciones</h2></div>';
+  var cont='<div style="color:var(--texto3);font-size:12px;">Cargando eventos...</div>';
+  h+='<div id="notifBody" style="max-height:55vh;overflow:auto;">'+cont+'</div>';
+  h+='<button class="act-btn act-save" style="width:100%;margin-top:12px;" onclick="cerrarOverlay()">Cerrar</button>';
+  overlay(h);
+  try{
+    var hoy=new Date().toISOString().substring(0,10);
+    var log=await invoke("leer_archivo",{path:RUTA_REGSIS+"\\registro_"+hoy+".log"});
+    var body=document.getElementById("notifBody"); if(!body) return;
+    if(!log || !log.trim()){ body.innerHTML='<div style="color:var(--texto3);font-size:12px;">Sin eventos registrados hoy.</div>'; return; }
+    var lines=log.split("\n").filter(function(l){ return l.trim(); });
+    var rel=lines.filter(function(l){ return /INICIANDO|APAGANDO|REINICI|Backup creado|entro al|salio del|actualiz|Turno|crash|ERROR|Servidor (listo|LISTO)|publicada/i.test(l); });
+    if(rel.length===0) rel=lines;
+    rel=rel.slice(-50).reverse();
+    var html="";
+    rel.forEach(function(l){ var col="var(--texto2)";
+      if(/\[OK\]|listo|creado|publicada/i.test(l)) col="var(--verde)";
+      else if(/\[ERROR\]|crash|fallo/i.test(l)) col="var(--rojo)";
+      else if(/\[WARN\]/i.test(l)) col="var(--amarillo)";
+      else if(/\[SISTEMA\]/i.test(l)) col="var(--acento)";
+      html+='<div class="item" style="padding:6px 8px;"><div class="item-sub" style="color:'+col+';font-family:monospace;">'+l.replace(/&/g,"&amp;").replace(/</g,"&lt;")+'</div></div>'; });
+    body.innerHTML=html;
+  }catch(e){ var b=document.getElementById("notifBody"); if(b) b.innerHTML='<div style="color:var(--rojo);font-size:12px;">Error: '+e+'</div>'; }
+}
+
+// Construir nav + botones con iconos
+function construirUI(){
+  var navs=[["dashboard","Dashboard","dashboard"],["consola","Consola","consola"],["jugadores","Jugadores","jugadores"],["backups","Backups","backups"],["stats","Stats","tps"],["config","Mundo","mundo"],["plugins","Plugins","plugin"],["ajustes","Ajustes","ajustes"],["equipo","Equipo","equipo"]];
+  var html="";
+  navs.forEach(function(n){ html+='<button class="nav-btn" data-view="'+n[0]+'" id="nav_'+n[0]+'" onclick="irVista(\''+n[0]+'\')">'+ico(n[2])+' '+t(n[0])+'</button>'; });
+  document.getElementById("navMenu").innerHTML=html;
+  document.getElementById("nav_dashboard").className="nav-btn active";
+  document.getElementById("btnStart").innerHTML=ico("play")+" "+t("iniciar");
+  document.getElementById("btnRestart").innerHTML=ico("restart")+" "+t("reiniciar");
+  document.getElementById("btnStop").innerHTML=ico("stop")+" "+t("apagar");
+  document.getElementById("btnSend").innerHTML=ico("send");
+  document.getElementById("cardsRow").innerHTML=
+    tarjeta("players","Jugadores","players","jugadores")+tarjeta("tps","TPS","tps","stats")+tarjeta("ram","RAM","ram","stats")+tarjeta("uptime","Activo","clock","stats")+tarjeta("backup","Backup","backups","backups");
+  document.getElementById("lblVer").innerHTML=ico("tag")+" Version del server";
+  document.getElementById("lblIp").innerHTML=ico("globe")+" Direccion (clic para copiar)";
+  document.getElementById("lblSalud").innerHTML=ico("heart")+" Salud del sistema";
+  document.getElementById("hMundo").innerHTML=ico("mundo")+'<span class="cfg-card-title">Mundo y Juego</span>';
+  document.getElementById("hMotor").innerHTML=ico("server")+'<span class="cfg-card-title">Motor del servidor</span>';
+  document.getElementById("btnGuardarProps").innerHTML=ico("save")+" Guardar cambios";
+  document.getElementById("subtAvanzado").innerHTML=ico("sliders")+" Todas las propiedades (avanzado)";
+  document.getElementById("subtConectados").innerHTML=ico("players")+" Conectados ahora";
+  var bn=document.getElementById("btnNotif"); if(bn) bn.innerHTML=ico("bell");
+  var li=document.getElementById("btnIdioma"); if(li) li.textContent=IDIOMA.toUpperCase();
+}
+function tarjeta(id,label,icon,vista){ var click=vista?(' style="cursor:pointer;" onclick="irVista(\''+vista+'\')"'):''; return '<div class="mini-card"'+click+'><div class="mc-top">'+ico(icon)+' '+label+'</div><div class="mc-value" id="'+id+'">--</div></div>'; }
+
+function esperarTauri(n){ n=n||0;
+  if(window.__TAURI__ && window.__TAURI__.core && window.__TAURI__.core.invoke){ invoke=window.__TAURI__.core.invoke; dbg("API lista"); init(); }
+  else if(n<50){ setTimeout(function(){esperarTauri(n+1);},100); }
+  else { document.getElementById("statusText").textContent="ERROR API"; }
+}
+
+async function init(){
+  construirUI();
+  try {
+    // Detectar la ubicacion real del proyecto (portable, no asume C:\ServidorTecnico)
+    try{ var base=await invoke("ruta_base"); if(base) setRutas(base); dbg("Ruta base: "+RUTA_BASE); }catch(e){}
+    // La config vive FUERA de la carpeta (%APPDATA%\Skeledex) para que la carpeta sea portable
+    try{ RUTA_APPDATA=await invoke("ruta_appdata"); }catch(e){ RUTA_APPDATA=RUTA_CONFIG; }
+    ARCHIVO_CONFIG=RUTA_APPDATA+"\\config.json";
+    dbg("Config: "+ARCHIVO_CONFIG);
+    var raw=await invoke("leer_archivo",{path:ARCHIVO_CONFIG});
+    // Migracion: si no hay config de usuario pero si una local antigua, traerla
+    if(!raw || !raw.trim()){
+      var local=await invoke("leer_archivo",{path:RUTA_CONFIG+"\\config.json"});
+      if(local && local.trim()){ await invoke("escribir_archivo",{path:ARCHIVO_CONFIG,contenido:local}); raw=local; dbg("Config migrada a APPDATA"); }
+    }
+    // Primer uso: no hay ninguna config -> mostrar onboarding
+    if(!raw || !raw.trim()){ dbg("Sin config: primer uso"); mostrarPrimerUso(); return; }
+    config=JSON.parse(raw);
+    // Generar ID unico de este PC si no existe (primera vez)
+    if(!config.identidad.pc_id){
+      config.identidad.pc_id="ST-"+Math.random().toString(16).substring(2,8);
+      try{ await invoke("escribir_archivo",{path:ARCHIVO_CONFIG,contenido:JSON.stringify(config,null,2)}); }catch(e){}
+    }
+    document.getElementById("userInfo").textContent=config.identidad.nombre_usuario+" | "+config.identidad.este_pc;
+    var t=localStorage.getItem("tema")||"azul"; setTema(t); aplicarAccentoGuardado();
+    aplicarRol();
+    resolverIP();
+    actualizarCuenta();
+    actualizarInstSel();
+    // Canal central: si auto ON y hay repo, busca mejoras en segundo plano
+    if(config.actualizaciones && config.actualizaciones.auto!==false){ setTimeout(function(){ chequearUpdate(true); },1800); }
+    try { var vh=await invoke("leer_archivo",{path:rutaInst()+"\\version_history.json"}); if(vh){ var j=JSON.parse(vh); if(j.currentVersion){ var m=j.currentVersion.match(/MC:\s*([\d.]+)/); document.getElementById("version").textContent=m?m[1]:j.currentVersion; } } } catch(e){}
+  } catch(e){ document.getElementById("userInfo").textContent="Error config"; dbg("ERROR init: "+e); }
+  cargarConfig();
+  actualizar();
+  cargarSaludExtra();
+  setInterval(actualizar,5000);
+  setInterval(cargarSaludExtra,60000);
+  aplicarAnuncioRec();
+  try{ if(!localStorage.getItem("migBackups")){ invoke("ps_comando",{script:"& '"+RUTA_SCRIPTS+"\\_migrar_backups.ps1'"}); localStorage.setItem("migBackups","1"); } }catch(e){}
+  setTimeout(mostrarTour,1200);
+}
+
+function resolverIP(){
+  var red=config.red||{};
+  if(red.direccion_publica) ipActual=red.direccion_publica;
+  else if(red.metodo==="playit") ipActual=red.playit_direccion;
+  else if(red.metodo==="duckdns" && red.duckdns_dominio) ipActual=red.duckdns_dominio+".duckdns.org";
+  else if(red.metodo==="manual") ipActual=red.ip_manual;
+  else ipActual="";
+  var el=document.getElementById("ipAddr"); if(el) el.textContent=ipActual||"No configurada";
+}
+
+function setTema(t){ document.body.setAttribute("data-theme",t); localStorage.setItem("tema",t);
+  document.body.style.removeProperty("--acento"); document.body.style.removeProperty("--acento2"); localStorage.removeItem("accento");
+  var d=document.querySelectorAll(".theme-dot"); for(var i=0;i<d.length;i++){ d[i].className="theme-dot"+(d[i].getAttribute("data-theme")===t?" sel":""); } }
+function setAccento(c){ document.body.style.setProperty("--acento",c); document.body.style.setProperty("--acento2",c); localStorage.setItem("accento",c);
+  var d=document.querySelectorAll(".theme-dot"); for(var i=0;i<d.length;i++){ d[i].className="theme-dot"; } }
+function aplicarAccentoGuardado(){ var c=localStorage.getItem("accento"); if(c){ document.body.style.setProperty("--acento",c); document.body.style.setProperty("--acento2",c); var cp=document.getElementById("colorPick"); if(cp) cp.value=c; } }
+
+function aplicarRol(){
+  var miembro=config.identidad && config.identidad.rol==="miembro";
+  ["nav_consola","nav_jugadores","nav_backups","nav_stats","nav_config","nav_plugins","nav_ajustes","nav_equipo"].forEach(function(id){ var e=document.getElementById(id); if(e) e.style.display=miembro?"none":""; });
+  var ck=document.getElementById("checklist"); if(ck) ck.style.display=miembro?"none":"";
+  var isel=document.getElementById("instSel"); if(isel) isel.style.display=miembro?"none":"";
+  var bc=document.getElementById("btnCompartir"); if(bc) bc.style.display=miembro?"none":"";
+  if(miembro){ irVista("dashboard"); }
+}
+
+function irVista(v){
+  var views=document.querySelectorAll(".view"); for(var i=0;i<views.length;i++){ views[i].className="view"+(views[i].id==="view-"+v?" active":""); }
+  var btns=document.querySelectorAll(".nav-btn"); for(var j=0;j<btns.length;j++){ btns[j].className="nav-btn"+(btns[j].getAttribute("data-view")===v?" active":""); }
+  var titIco={dashboard:"dashboard",consola:"consola",jugadores:"jugadores",backups:"backups",stats:"tps",config:"mundo",plugins:"plugin",ajustes:"ajustes",equipo:"equipo"};
+  document.getElementById("viewTitle").innerHTML=ico(titIco[v]||"dashboard")+" "+t("t_"+v);
+  if(v==="backups") cargarBackups();
+  if(v==="jugadores"){ cargarJugadores(); aplicarAnuncioRec(); }
+  if(v==="ajustes") renderAjustes();
+  if(v==="equipo") renderEquipo();
+  if(v==="stats") renderStats();
+  if(v==="plugins") renderPlugins();
+  if(v==="config"){ renderMotor(); ocultarFab("fabGuardarProps"); }
+  var av=document.getElementById("view-"+v); if(av){ var sEl=av.querySelector(".scroll")||av; if(sEl) sEl.scrollTop=0; }
+}
+async function cargarUsoNube(){
+  var c=document.getElementById("nubeUso"); if(!c) return;
+  c.innerHTML='<div class="cfg-card"><div class="cfg-card-head">'+ico("globe")+'<span class="cfg-card-title">Uso de la nube</span></div><div class="cfg-card-desc">Consultando...</div></div>';
+  try{
+    var r=await invoke("ps_comando",{script:"& '"+RUTA_SCRIPTS+"\\_nube_info.ps1'"});
+    var d=JSON.parse(r);
+    if(!d.ok){ c.innerHTML='<div class="cfg-card"><div class="cfg-card-head">'+ico("globe")+'<span class="cfg-card-title">Uso de la nube</span></div><div class="cfg-card-desc">No se pudo consultar (revisa rclone/credenciales).</div></div>'; return; }
+    var base=d.soporta_cuota?d.total_gb:d.limite_gb;
+    var porc=d.porcentaje||0;
+    var col=porc>=90?"var(--rojo)":porc>=70?"var(--amarillo)":"var(--verde)";
+    var prov=(config.nube&&config.nube.proveedor)?config.nube.proveedor:"Nube";
+    var h='<div class="cfg-card"><div class="cfg-card-head">'+ico("globe")+'<span class="cfg-card-title">Uso de la nube</span></div>';
+    h+='<div class="cfg-card-desc">'+prov+' &middot; '+d.archivos+' archivos'+(d.soporta_cuota?" (cuota real del proveedor)":" (limite configurado)")+'</div>';
+    h+='<div style="display:flex;justify-content:space-between;font-size:13px;margin:4px 0;"><span>'+d.usado_gb+' GB usados</span><span style="color:'+col+';font-weight:700;">'+porc+'%</span><span>'+base+' GB</span></div>';
+    h+='<div style="height:10px;background:var(--borde,#2a2f3a);border-radius:6px;overflow:hidden;"><div style="height:100%;width:'+Math.min(porc,100)+'%;background:'+col+';transition:width .4s;"></div></div>';
+    if(porc>=90) h+='<div class="banner" style="margin-top:8px;">Casi llena. Borra backups viejos o sube el limite.</div>';
+    h+='</div>';
+    c.innerHTML=h;
+  }catch(e){ c.innerHTML='<div class="cfg-card"><div class="cfg-card-head">'+ico("globe")+'<span class="cfg-card-title">Uso de la nube</span></div><div class="cfg-card-desc">Error: '+e+'</div></div>'; }
+}
+// ===== PLUGINS (Modrinth) + MAPA =====
+function carpInst(){ return (config.servidor&&config.servidor.carpeta_instancia)||"Instancia"; }
+function renderPlugins(){
+  var rol=config.identidad?config.identidad.rol:"";
+  if(rol==="miembro"){ document.getElementById("pluginsScroll").innerHTML='<div class="banner">Solo owner/operador puede gestionar plugins.</div>'; return; }
+  var h='<div class="cfg-card"><div class="cfg-card-head">'+ico("plugin")+'<span class="cfg-card-title">Buscar e instalar plugins</span></div>';
+  h+='<div class="cfg-card-desc">Desde Modrinth. Se guardan en la carpeta plugins. Reinicia el servidor para activarlos.</div>';
+  h+='<div style="display:flex;gap:8px;"><input class="cmd-input" id="pluginQuery" placeholder="Ej: EssentialsX, LuckPerms, WorldEdit... (escribe y aparecen)" style="flex:1;" oninput="buscarPluginsDebounce()" onkeydown="if(event.key===\'Enter\')buscarPlugins()"><button class="mini-btn" style="background:var(--acento);color:#fff;" onclick="buscarPlugins()">Buscar</button></div>';
+  h+='<div id="pluginResultados" style="margin-top:10px;"></div></div>';
+  // Mapa en vivo
+  h+='<div class="cfg-card"><div class="cfg-card-head">'+ico("map")+'<span class="cfg-card-title">Mapa en vivo (BlueMap)</span></div>';
+  h+='<div class="cfg-card-desc">Instala BlueMap para ver tu mundo en 3D en el navegador. Tras instalarlo, reinicia el servidor.</div>';
+  h+='<div class="item-btns"><button class="mini-btn" style="background:var(--acento);color:#fff;" onclick="instalarPlugin(\'swbUV1cr\',\'BlueMap\')">Instalar BlueMap</button><button class="mini-btn" style="background:var(--card2);color:var(--texto);" onclick="abrirMapa()">Abrir mapa</button></div></div>';
+  // Instalados
+  h+='<div class="cfg-card"><div class="cfg-card-head">'+ico("plugin")+'<span class="cfg-card-title">Plugins instalados</span></div><div id="pluginInstalados"><div style="color:var(--texto3);font-size:12px;">Cargando...</div></div></div>';
+  document.getElementById("pluginsScroll").innerHTML=h;
+  listarPlugins();
+}
+var pluginDeb=null;
+function buscarPluginsDebounce(){ if(pluginDeb) clearTimeout(pluginDeb); pluginDeb=setTimeout(function(){ var q=(gv("pluginQuery")||"").trim(); if(q.length>=2){ buscarPlugins(); } },350); }
+async function buscarPlugins(){
+  var q=(gv("pluginQuery")||"").trim().replace(/'/g,""); var cont=document.getElementById("pluginResultados");
+  if(!q){ cont.innerHTML='<div class="banner">Escribe algo para buscar.</div>'; return; }
+  cont.innerHTML='<div style="color:var(--texto3);font-size:12px;">Buscando...</div>';
+  try{
+    var r=await invoke("ps_comando",{script:"& '"+RUTA_SCRIPTS+"\\_plugins.ps1' -Accion buscar -Query '"+q+"'"});
+    var d=JSON.parse(r);
+    if(!d.ok || !d.resultados || d.resultados.length===0){ cont.innerHTML='<div class="banner">Sin resultados.</div>'; return; }
+    cont.innerHTML="";
+    d.resultados.forEach(function(p){ var div=document.createElement("div"); div.className="item";
+      var desc=(p.desc||"").replace(/</g,"&lt;"); if(desc.length>90) desc=desc.substring(0,90)+"...";
+      div.innerHTML='<div class="item-info"><div><div>'+p.titulo+' <span class="item-sub">por '+(p.autor||"?")+'</span></div><div class="item-sub">'+desc+'</div></div></div><div class="item-btns"><button class="mini-btn" style="background:var(--acento);color:#fff;" onclick="instalarPlugin(\''+p.id+'\',\''+(p.titulo||"").replace(/'/g,"")+'\')">Instalar</button></div>';
+      cont.appendChild(div); });
+  }catch(e){ cont.innerHTML='<div class="banner">Error: '+e+'</div>'; }
+}
+async function instalarPlugin(id,nombre){
+  toast("Instalando "+nombre+"...","info");
+  try{
+    var r=await invoke("ps_comando",{script:"& '"+RUTA_SCRIPTS+"\\_plugins.ps1' -Accion instalar -ProjectId '"+id+"' -CarpetaInstancia '"+carpInst()+"'"});
+    var d=JSON.parse(r);
+    if(d.ok){ toast(nombre+" instalado: "+d.archivo+". Reinicia el servidor.","ok"); listarPlugins(); }
+    else { toast("No se pudo instalar ("+(d.error||"?")+")","error"); }
+  }catch(e){ toast("Error: "+e,"error"); }
+}
+async function listarPlugins(){
+  var cont=document.getElementById("pluginInstalados"); if(!cont) return;
+  try{
+    var r=await invoke("ps_comando",{script:"& '"+RUTA_SCRIPTS+"\\_plugins.ps1' -Accion listar -CarpetaInstancia '"+carpInst()+"'"});
+    var d=JSON.parse(r);
+    if(!d.ok || !d.plugins || d.plugins.length===0){ cont.innerHTML='<div style="color:var(--texto3);font-size:12px;">No hay plugins instalados.</div>'; return; }
+    cont.innerHTML="";
+    d.plugins.forEach(function(p){ var div=document.createElement("div"); div.className="item"; var n=(p.nombre||"").replace(/'/g,"");
+      div.innerHTML='<div class="item-info">'+ico("plugin")+'<div><div>'+p.nombre+'</div><div class="item-sub">'+p.mb+' MB</div></div></div><div class="item-btns"><button class="mini-btn mb-ban" onclick="eliminarPlugin(\''+n+'\')">Eliminar</button></div>';
+      cont.appendChild(div); });
+  }catch(e){ cont.innerHTML='<div style="color:var(--rojo);font-size:12px;">Error: '+e+'</div>'; }
+}
+function eliminarPlugin(nombre){
+  confirmarAccion("Eliminar plugin","Seguro que quieres borrar "+nombre+"? Reinicia el servidor despues.",async function(){
+    try{ var r=await invoke("ps_comando",{script:"& '"+RUTA_SCRIPTS+"\\_plugins.ps1' -Accion eliminar -Nombre '"+nombre.replace(/'/g,"''")+"' -CarpetaInstancia '"+carpInst()+"'"});
+      var d=JSON.parse(r); if(d.ok){ toast("Plugin eliminado","ok"); listarPlugins(); } else toast("No se pudo eliminar","error");
+    }catch(e){ toast("Error: "+e,"error"); }
+  });
+}
+function abrirMapa(){ try{ invoke("ps_comando",{script:"Start-Process 'http://localhost:8100'"}); toast("Abriendo el mapa en el navegador (localhost:8100)","info"); }catch(e){ toast("Error: "+e,"error"); } }
+
+async function renderStats(){
+  var cont=document.getElementById("statsScroll");
+  cont.innerHTML='<div id="nubeUso"></div><div id="statsGraf"></div><div id="statsResto"></div>';
+  cont=document.getElementById("statsResto");
+  cargarUsoNube();
+  (function(){ var g=document.getElementById("statsGraf"); if(!g) return;
+    var tps=histStats.map(function(x){return x.t;}), ram=histStats.map(function(x){return x.r/1024;});
+    if(histStats.length<2){ g.innerHTML='<div class="cfg-card"><div class="cfg-card-head">'+ico("tps")+'<span class="cfg-card-title">Historial TPS y RAM</span></div><div class="cfg-card-desc">Se ira llenando mientras el servidor este encendido y el panel abierto.</div></div>'; return; }
+    var ultTps=tps[tps.length-1], ultRam=ram[ram.length-1];
+    g.innerHTML='<div class="cfg-card"><div class="cfg-card-head">'+ico("tps")+'<span class="cfg-card-title">Historial TPS y RAM</span></div>'
+      +'<div style="display:flex;justify-content:space-between;font-size:12px;"><span>TPS (ultimo '+ultTps.toFixed(1)+')</span></div>'+sparkline(tps,"var(--verde)",40,20)
+      +'<div style="display:flex;justify-content:space-between;font-size:12px;margin-top:8px;"><span>RAM GB (ultimo '+ultRam.toFixed(1)+')</span></div>'+sparkline(ram,"var(--acento)",40)
+      +'</div>';
+  })();
+  try{
+    var raw=await invoke("leer_archivo",{path:RUTA_ESTADO+"\\historial.json"});
+    var hist=raw?JSON.parse(raw):[];
+    if(!Array.isArray(hist)) hist=hist?[hist]:[];
+    if(hist.length===0){ cont.innerHTML='<div class="banner">Aun no hay sesiones registradas. Se guardan automaticamente cada vez que apagas el servidor.</div>'; return; }
+    var totalMin=0, porPC={}, porUser={};
+    hist.forEach(function(s){ var d=parseFloat(s.duracion_min)||0; totalMin+=d; porPC[s.pc]=(porPC[s.pc]||0)+d; if(s.usuario) porUser[s.usuario]=(porUser[s.usuario]||0)+d; });
+    function hm(m){ var h=Math.floor(m/60),mm=Math.round(m%60); return (h>0?h+"h ":"")+mm+"m"; }
+    var h='<div class="cards-row" style="grid-template-columns:repeat(3,1fr);">';
+    h+='<div class="mini-card"><div class="mc-top">'+ico("backups")+' Sesiones</div><div class="mc-value">'+hist.length+'</div></div>';
+    h+='<div class="mini-card"><div class="mc-top">'+ico("clock")+' Tiempo total</div><div class="mc-value">'+hm(totalMin)+'</div></div>';
+    h+='<div class="mini-card"><div class="mc-top">'+ico("clock")+' Promedio</div><div class="mc-value">'+hm(totalMin/hist.length)+'</div></div>';
+    h+='</div>';
+    h+='<div class="subt">Tiempo por PC</div>';
+    Object.keys(porPC).forEach(function(pc){ h+='<div class="item"><div class="item-info">'+ico("server")+pc+'</div><div class="item-sub">'+hm(porPC[pc])+'</div></div>'; });
+    h+='<div class="subt">Ultimas sesiones</div>';
+    hist.slice(-15).reverse().forEach(function(s){
+      h+='<div class="item"><div class="item-info">'+ico("clock")+'<div><div>'+(s.usuario||s.pc)+' &middot; '+s.pc+'</div><div class="item-sub">'+(s.inicio||"").replace("T"," ")+'</div></div></div><div class="item-sub">'+hm(parseFloat(s.duracion_min)||0)+'</div></div>';
+    });
+    cont.innerHTML=h;
+  }catch(e){ cont.innerHTML='<div class="banner">Error leyendo historial: '+e+'</div>'; }
+}
+
+// ===== RCON nativo =====
+async function rconCmd(c){ try{ var p=(config.servidor&&config.servidor.rcon_puerto)?config.servidor.rcon_puerto:25575; var pw=(config.servidor&&config.servidor.rcon_password)?config.servidor.rcon_password:""; return await invoke("rcon",{host:"127.0.0.1",port:p,password:pw,comando:c}); }catch(e){ return "[RCON no responde]"; } }
+
+async function actualizar(){
+  try {
+    var lockRaw=await invoke("leer_archivo",{path:RUTA_ESTADO+"\\servidor.lock"});
+    var estadoRaw=await invoke("leer_archivo",{path:RUTA_ESTADO+"\\estado.json"});
+    var estado=estadoRaw?JSON.parse(estadoRaw):{};
+    var online=false, lock=null;
+    if(lockRaw && lockRaw.trim()){
+      try{ lock=JSON.parse(lockRaw); }catch(e){ lock=null; }
+      if(lock && lock.pid){ var ep=JSON.parse(await invoke("estado_proceso",{pid:lock.pid})); online=ep.vivo;
+        if(online && ep.ram_mb>0){ ramActualMb=ep.ram_mb; document.getElementById("ram").textContent=ep.ram_mb>=1024?(ep.ram_mb/1024).toFixed(1)+" GB":ep.ram_mb+" MB"; } }
+    }
+    // Mantener "cargando" hasta que el estado real se confirme (online al iniciar/reiniciar, offline al apagar)
+    if(accionEnCurso){
+      var elapsed=Date.now()-accionInicio;
+      if(!online) sawOffline=true;
+      var completar=false;
+      if(accionTipo==="apagar"){ if(!online && elapsed>3000) completar=true; }
+      else { if(online && (accionTipo==="iniciar" || sawOffline || elapsed>15000)) completar=true; }
+      if(elapsed>300000){ completar=true; var fallo=(accionTipo==="apagar")?online:(!online); if(fallo) toast("La operacion tardo demasiado. Revisa la consola para ver que paso.","error"); }
+      if(completar){ accionEnCurso=false; if(accionBtn){ var be=document.getElementById(accionBtn); if(be) be.innerHTML=accionBtnOrig; } if(progInterval){clearInterval(progInterval);progInterval=null;} }
+    }
+    if(online){
+      prevOnline=true;
+      if(!accionEnCurso){ setStatus("ONLINE","online"); document.getElementById("statusSub").textContent="Turno: "+config.identidad.este_pc; bstate(false,true,true); }
+      if(lock.inicio){ var d=Math.floor((Date.now()-new Date(lock.inicio).getTime())/1000); var h=Math.floor(d/3600),mm=Math.floor((d%3600)/60); document.getElementById("uptime").textContent=h>0?h+"h "+mm+"m":mm+"m"; }
+      ciclo++; if(ciclo%2===1){ actualizarJugadores(); actualizarTPS(); }
+      document.getElementById("hServer").className="hdot ok";
+    } else {
+      prevOnline=false;
+      if(!accionEnCurso) setStatus("OFFLINE","");
+      if(!accionEnCurso) document.getElementById("statusSub").textContent="";
+      if(!accionEnCurso) bstate(true,false,false);
+      document.getElementById("players").textContent="--"; document.getElementById("uptime").textContent="--"; document.getElementById("ram").textContent="--"; document.getElementById("tps").textContent="--";
+      document.getElementById("hServer").className="hdot";
+    }
+    if(estado.ultimo_backup){ var mins=Math.floor((Date.now()-new Date(estado.ultimo_backup).getTime())/60000);
+      document.getElementById("backup").textContent=mins<60?"Hace "+mins+"m":mins<1440?"Hace "+Math.floor(mins/60)+"h":"Hace "+Math.floor(mins/1440)+"d"; }
+    if(document.getElementById("view-consola").className.indexOf("active")>=0){
+      var lc=await invoke("leer_archivo",{path:rutaInst()+"\\logs\\latest.log"});
+      if(lc){ var lines=lc.split("\n").filter(function(l){return l.trim();}).slice(-100); var el=document.getElementById("logArea"); el.innerHTML=""; lines.forEach(function(l){ agregarLog(l); }); filtrarLog(); }
+    }
+    if(ciclo%6===2) actualizarSalud();
+  } catch(e){ dbg("ERROR actualizar: "+e); }
+}
+function bstate(s,st,r){ document.getElementById("btnStart").disabled=!s; document.getElementById("btnStop").disabled=!st; document.getElementById("btnRestart").disabled=!r; }
+async function actualizarSalud(){ try{ var s=JSON.parse(await invoke("info_salud",{rutaBase:RUTA_BASE}));
+  if(s.disco_gb!==undefined){ document.getElementById("hDiscoT").textContent="Disco: "+s.disco_gb+" GB"; document.getElementById("hDisco").className="hdot "+(s.disco_gb>2?"ok":"fail"); }
+  document.getElementById("hNet").className="hdot "+(s.internet==="ok"?"ok":"fail"); }catch(e){} }
+var saludExtraCache=null;
+async function cargarSaludExtra(){
+  try{
+    var s=JSON.parse(await invoke("ps_comando",{script:"& '"+RUTA_SCRIPTS+"\\_salud_extra.ps1'"}));
+    saludExtraCache=s;
+    var j=document.getElementById("hJava"); if(j){ j.className="hdot "+(s.java?"ok":"fail"); document.getElementById("hJavaT").textContent="Java"+(s.java_version?" "+s.java_version:" (falta)"); }
+    var n=document.getElementById("hNube"); if(n) n.className="hdot "+(s.rclone?"ok":"fail");
+    var rm=document.getElementById("hRam"); if(rm){ rm.className="hdot "+(s.ram_libre_gb>1?"ok":"fail"); document.getElementById("hRamT").textContent="RAM libre: "+s.ram_libre_gb+" GB"; }
+    renderChecklist();
+  }catch(e){}
+}
+function renderChecklist(){
+  var c=document.getElementById("checklist"); if(!c) return;
+  if(config.identidad && config.identidad.rol==="miembro"){ c.style.display="none"; c.innerHTML=""; return; }
+  c.style.display=""; var s=saludExtraCache||{}; var rows=[];
+  rows.push({ok:!!s.java,label:"Java",txt:s.java?("instalado"+(s.java_version?" "+s.java_version:"")):"falta (necesario)",btn:s.java?null:{t:"Instalar Java",fn:"instalarJava()"}});
+  rows.push({ok:!!s.jar,label:"Servidor (.jar)",txt:s.jar?"listo":"falta el motor",btn:s.jar?null:{t:"Preparar servidor",fn:"irVista('config')"}});
+  if(config.local){ rows.push({ok:true,label:"Almacenamiento",txt:"modo local (este PC)"}); }
+  else { var nubeOk=!!(s.rclone && config.nube && config.nube.bucket); rows.push({ok:nubeOk,label:"Nube",txt:nubeOk?"conectada":"falta configurar",btn:nubeOk?null:{t:"Configurar nube",fn:"irVista('ajustes')"}}); }
+  var red=config.red||{}; var redOk=!!(red.metodo && red.metodo!=="ninguno" && (red.direccion_publica||red.playit_direccion||red.ip_manual||red.duckdns_dominio));
+  rows.push({ok:redOk,label:"Red (como entran tus amigos)",txt:redOk?"configurada":"opcional",btn:redOk?null:{t:"Configurar red",fn:"irVista('ajustes')"}});
+  var faltan=rows.filter(function(r){return !r.ok;}).length;
+  var h='<div class="info-box" style="margin-bottom:12px;"><div class="ib-label">'+ico(faltan?"alert":"check")+' '+(faltan?("Te falta(n) "+faltan+" paso(s) para jugar"):"Todo listo para jugar")+'</div><div style="margin-top:8px;">';
+  rows.forEach(function(r){ h+='<div class="item" style="padding:7px 8px;"><div class="item-info"><span class="hdot '+(r.ok?"ok":"fail")+'"></span><div><div>'+r.label+'</div><div class="item-sub">'+r.txt+'</div></div></div>'+(r.btn?('<div class="item-btns"><button class="mini-btn" onclick="'+r.btn.fn+'">'+r.btn.t+'</button></div>'):'')+'</div>'; });
+  h+='</div></div>'; c.innerHTML=h;
+}
+async function instalarJava(){
+  toast("Instalando Java (Adoptium)... puede tardar 1-2 min.","info");
+  try{ var r=await invoke("ps_comando",{script:"& '"+RUTA_SCRIPTS+"\\_java_install.ps1'"}); var d=JSON.parse(r);
+    if(d.ok){ if(!config.servidor)config.servidor={}; config.servidor.java_exe=d.java; await invoke("escribir_archivo",{path:ARCHIVO_CONFIG,contenido:JSON.stringify(config,null,2)}); toast("Java instalado correctamente","ok"); cargarSaludExtra(); }
+    else { toast("No se pudo instalar Java ("+(d.error||"?")+")","error"); }
+  }catch(e){ toast("Error: "+e,"error"); }
+}
+async function instalarPlayit(){
+  toast("Instalando Playit...","info");
+  try{ var r=await invoke("ps_comando",{script:"& '"+RUTA_SCRIPTS+"\\_playit_install.ps1'"}); var d=JSON.parse(r);
+    if(d.ok){ if(!config.red)config.red={}; config.red.metodo="playit"; await invoke("escribir_archivo",{path:ARCHIVO_CONFIG,contenido:JSON.stringify(config,null,2)}); toast("Playit instalado. Pulsa 'Configurar / vincular Playit'.","ok"); saludExtraCache=null; await cargarSaludExtra(); renderAjustes(); }
+    else { toast("No se pudo instalar Playit","error"); }
+  }catch(e){ toast("Error: "+e,"error"); }
+}
+function configurarPlayit(){
+  toast("Abriendo Playit para vincular tu tunel...","info");
+  var ps="$p=Join-Path '"+RUTA_BASE+"' 'playit.exe'; if(-not (Test-Path $p)){ $p='C:\\Program Files\\playit_gg\\bin\\playit.exe' }; if(Test-Path $p){ Start-Process cmd.exe -ArgumentList '/k',('\"'+$p+'\"') } else { Start-Process 'https://playit.gg/' }";
+  try{ invoke("ps_comando",{script:ps}); toast("Sigue los pasos en la ventana de Playit: te da un enlace para vincular y tu direccion (pegala arriba).","info"); }catch(e){ toast("Error: "+e,"error"); }
+}
+function compartir(){
+  var dir=ipActual||""; if(!dir){ toast("Configura la red en Ajustes para tener una direccion","info"); irVista("ajustes"); return; }
+  var msg="Te invito a mi servidor de Minecraft!\\n\\nDireccion: "+dir+"\\n\\nComo entrar: abre Minecraft > Multijugador > Agregar servidor, y pega esa direccion.";
+  try{ navigator.clipboard.writeText(msg); }catch(e){}
+  toast("Mensaje de invitacion copiado. Pegalo a tus amigos!","ok");
+}
+async function actualizarJugadores(){ try{ var r=await rconCmd("list"); var m=r.match(/(\d+) of a max of (\d+)/); if(m) document.getElementById("players").textContent=m[1]+" / "+m[2]; }catch(e){} }
+async function actualizarTPS(){ try{ var r=await rconCmd("tps"); var l=r.replace(/\u00a7./g,""); var m=l.match(/:\s*([\d]+[.,]?\d*)/); if(m){ var tps=parseFloat(m[1].replace(",",".")); var el=document.getElementById("tps"); el.textContent=tps.toFixed(1); el.style.color=tps>=19?"var(--verde)":tps>=15?"var(--amarillo)":"var(--rojo)"; muestrearStats(tps,ramActualMb); } }catch(e){} }
+var ramActualMb=0, histStats=[];
+try{ histStats=JSON.parse(localStorage.getItem("histStats")||"[]"); }catch(e){ histStats=[]; }
+function muestrearStats(tps,ramMb){ histStats.push({t:Math.round(tps*10)/10,r:ramMb,h:Date.now()}); if(histStats.length>120) histStats=histStats.slice(-120); try{ localStorage.setItem("histStats",JSON.stringify(histStats)); }catch(e){} }
+function sparkline(vals,color,alto,maxRef){ if(!vals.length) return '<div class="item-sub">Sin datos aun.</div>';
+  var w=280,h=alto||40,max=maxRef||Math.max.apply(null,vals)||1,min=Math.min.apply(null,vals);
+  if(max===min) max=min+1; var pts=vals.map(function(v,i){ var x=(i/(vals.length-1||1))*w; var y=h-((v-min)/(max-min))*h; return x.toFixed(1)+","+y.toFixed(1); }).join(" ");
+  return '<svg viewBox="0 0 '+w+' '+h+'" preserveAspectRatio="none" style="width:100%;height:'+h+'px;"><polyline points="'+pts+'" fill="none" stroke="'+color+'" stroke-width="2"/></svg>'; }
+
+function setStatus(t,c){ var d=document.getElementById("statusDot"),x=document.getElementById("statusText"); d.className="status-dot "+c; x.textContent=t; x.style.color=c==="online"?"var(--verde)":c==="loading"?"var(--amarillo)":"var(--rojo)"; }
+function agregarLog(l){ var lg=document.getElementById("logArea"),dv=document.createElement("div");
+  if(l.indexOf("[OK]")>=0||l.indexOf("/INFO]")>=0)dv.className="log-ok"; else if(l.indexOf("[ERROR]")>=0||l.indexOf("/ERROR]")>=0)dv.className="log-error";
+  else if(l.indexOf("[WARN]")>=0||l.indexOf("/WARN]")>=0)dv.className="log-warn"; else if(l.indexOf("[SISTEMA]")>=0)dv.className="log-system"; else if(l.charAt(0)===">")dv.className="log-cmd";
+  dv.textContent=l; lg.appendChild(dv); lg.scrollTop=lg.scrollHeight; }
+function filtrarLog(){ var q=(document.getElementById("logSearch").value||"").toLowerCase(); var lg=document.getElementById("logArea");
+  for(var i=0;i<lg.children.length;i++){ var t=lg.children[i].textContent.toLowerCase(); lg.children[i].style.display=(!q||t.indexOf(q)>=0)?"":"none"; } }
+function copiarLog(){ var lg=document.getElementById("logArea"); var txt=""; for(var i=0;i<lg.children.length;i++){ txt+=lg.children[i].textContent+"\n"; } try{ navigator.clipboard.writeText(txt); toast("Log copiado","ok"); }catch(e){ toast("No se pudo copiar","error"); } }
+function limpiarLog(){ document.getElementById("logArea").innerHTML=""; toast("Consola limpiada (se recarga del log real)","info"); }
+
+var accionEnCurso=false, accionTipo=null, accionInicio=0, accionBtn=null, accionBtnOrig="", sawOffline=false;
+var confirmaPend=null;
+function iniciarProgreso(){
+  if(progInterval) clearInterval(progInterval);
+  var hoy=new Date(); var fecha=hoy.getFullYear()+"-"+String(hoy.getMonth()+1).padStart(2,"0")+"-"+String(hoy.getDate()).padStart(2,"0");
+  progInterval=setInterval(async function(){
+    if(!accionEnCurso){ clearInterval(progInterval); progInterval=null; return; }
+    try{
+      var lc=await invoke("leer_archivo",{path:RUTA_REGSIS+"\\registro_"+fecha+".log"});
+      if(lc){ var lines=lc.split("\n").filter(function(l){return l.trim();});
+        var ult=lines[lines.length-1]||"";
+        var m=ult.match(/\]\s*(.+)$/); if(m){ document.getElementById("statusSub").textContent=m[1].substring(0,40); }
+      }
+    }catch(e){}
+  },1500);
+}
+async function accion(t){
+  // Confirmacion para acciones destructivas
+  if((t==="apagar"||t==="reiniciar") && confirmaPend!==t){
+    confirmaPend=t;
+    toast((t==="apagar"?"Apagar":"Reiniciar")+": haz clic de nuevo para confirmar","info");
+    setTimeout(function(){ if(confirmaPend===t) confirmaPend=null; },3500);
+    return;
+  }
+  confirmaPend=null;
+  accionEnCurso=true; accionTipo=t; accionInicio=Date.now(); sawOffline=false;
+  setStatus(t==="iniciar"?"INICIANDO...":t==="apagar"?"APAGANDO...":"REINICIANDO...","loading");
+  bstate(false,false,false);
+  var btn=t==="iniciar"?"btnStart":t==="apagar"?"btnStop":"btnRestart";
+  var orig=document.getElementById(btn).innerHTML;
+  accionBtn=btn; accionBtnOrig=orig;
+  document.getElementById(btn).innerHTML=ico("restart").replace("svg","svg class=spin")+" Espera...";
+  toast(t==="iniciar"?"Iniciando servidor...":t==="apagar"?"Apagando servidor...":"Reiniciando servidor...","info");
+  if(t==="iniciar"||t==="reiniciar") iniciarProgreso();
+  try{ await invoke("ejecutar_accion",{rutaScripts:RUTA_SCRIPTS,accion:t}); }catch(e){ toast("Error: "+e,"error"); }
+  setTimeout(actualizar,2500);
+}
+
+async function enviarCmd(){ var i=document.getElementById("cmdInput"),c=i.value.trim(); if(!c)return; i.value="";
+  var lg=document.getElementById("logArea"),cd=document.createElement("div"); cd.className="log-cmd"; cd.textContent="> "+c; lg.appendChild(cd);
+  try{ var r=await rconCmd(c); var rd=document.createElement("div"); rd.className=r.indexOf("[RCON no responde]")>=0?"log-error":"log-resp"; rd.textContent="  "+r; lg.appendChild(rd); }catch(e){} lg.scrollTop=lg.scrollHeight; }
+
+async function cargarJugadores(){
+  try{ var r=await rconCmd("list"); var cont=document.getElementById("listaJugadores"); cont.innerHTML="";
+    var m=r.match(/online:\s*(.+)$/);
+    if(m && m[1].trim()){ m[1].split(",").forEach(function(n){ n=n.trim(); if(n){ var d=document.createElement("div"); d.className="item"; d.innerHTML='<div class="item-info">'+ico("players")+n+'</div>'; cont.appendChild(d); } }); }
+    else { cont.innerHTML='<div style="color:var(--texto3);font-size:12px;">No hay jugadores conectados.</div>'; }
+  }catch(e){ document.getElementById("listaJugadores").innerHTML='<div style="color:var(--rojo);font-size:12px;">Servidor offline.</div>'; }
+}
+async function accionJugador(acc){ var n=document.getElementById("playerName").value.trim(); if(!n){ toast("Escribe un nombre","error"); return; }
+  var cmd;
+  switch(acc){ case "op": cmd="op "+n; break; case "deop": cmd="deop "+n; break; case "kick": cmd="kick "+n; break;
+    case "ban": cmd="ban "+n; break; case "pardon": cmd="pardon "+n; break;
+    case "whitelist add": cmd="whitelist add "+n; break; case "whitelist remove": cmd="whitelist remove "+n; break;
+    default: cmd=acc+" "+n; }
+  await rconCmd(cmd); toast("Comando enviado: "+cmd,"ok"); setTimeout(cargarJugadores,800); }
+async function decirChat(){ var m=document.getElementById("chatMsg").value.trim(); var msg=document.getElementById("msgChat");
+  if(!m){ if(msg){msg.style.color="var(--rojo)";msg.textContent="Escribe un mensaje.";} return; }
+  await rconCmd("say "+m); document.getElementById("chatMsg").value=""; if(msg){msg.style.color="var(--verde)";msg.textContent="Mensaje enviado al chat.";} toast("Mensaje enviado","ok"); }
+var anunRecTimer=null;
+function aplicarAnuncioRec(){
+  if(anunRecTimer){ clearInterval(anunRecTimer); anunRecTimer=null; }
+  var cfg=null; try{ cfg=JSON.parse(localStorage.getItem("anuncioRec")||"null"); }catch(e){}
+  var ti=document.getElementById("anunRecTexto"), mi=document.getElementById("anunRecMin"), bt=document.getElementById("btnAnunRec");
+  if(cfg){ if(ti)ti.value=cfg.texto||""; if(mi)mi.value=cfg.min||15; }
+  if(cfg && cfg.on && cfg.texto){
+    if(bt){ bt.textContent="Desactivar"; bt.style.background="var(--verde)"; bt.style.color="#fff"; }
+    anunRecTimer=setInterval(function(){ if(prevOnline){ rconCmd("say "+cfg.texto); } }, Math.max(1,cfg.min)*60000);
+  } else if(bt){ bt.textContent="Activar"; bt.style.background="var(--card2)"; bt.style.color="var(--texto)"; }
+}
+function toggleAnuncioRec(){
+  var cfg=null; try{ cfg=JSON.parse(localStorage.getItem("anuncioRec")||"null"); }catch(e){}
+  var on=!(cfg&&cfg.on); var texto=(document.getElementById("anunRecTexto").value||"").trim(); var min=parseInt(document.getElementById("anunRecMin").value)||15;
+  if(on && !texto){ toast("Escribe el texto del anuncio","error"); return; }
+  localStorage.setItem("anuncioRec",JSON.stringify({on:on,texto:texto,min:min}));
+  aplicarAnuncioRec();
+  toast(on?("Anuncio cada "+min+" min activado"):"Anuncio recurrente desactivado", on?"ok":"info");
+}
+async function reiniciarConAviso(){
+  if(document.getElementById("btnRestart").disabled){ toast("El servidor no esta encendido","info"); return; }
+  toast("Reinicio en 60s, avisando a los jugadores...","info");
+  await rconCmd('say §eEl servidor se reiniciara en 60 segundos.');
+  setTimeout(function(){ rconCmd('say §eReinicio en 30 segundos...'); },30000);
+  setTimeout(function(){ rconCmd('say §eReinicio en 10 segundos...'); },50000);
+  setTimeout(function(){ rconCmd('say §cReiniciando ahora...'); },58000);
+  setTimeout(function(){ accion("reiniciar"); },60000);
+}
+
+async function cargarBackups(){
+  try{ var r=await invoke("listar_backups",{rutaBackups:rutaInst()+"\\Backups"}); var arr=JSON.parse(r); if(!Array.isArray(arr)) arr=arr?[arr]:[];
+    var cont=document.getElementById("listaBackups"); cont.innerHTML="";
+    if(arr.length===0){ cont.innerHTML='<div style="color:var(--texto3);font-size:12px;">No hay backups aun.</div>'; return; }
+    var totalMB=0; arr.forEach(function(b){ totalMB+=parseFloat(b.mb)||0; });
+    var resumen=document.createElement("div"); resumen.className="banner";
+    resumen.textContent=arr.length+" copias · "+(totalMB>=1024?(totalMB/1024).toFixed(1)+" GB":totalMB.toFixed(0)+" MB")+" en total";
+    cont.appendChild(resumen);
+    arr.slice(0,40).forEach(function(b){ var d=document.createElement("div"); d.className="item";
+      var col=b.tipo==="AntesDeIniciar"?"#5b8cff":b.tipo==="DespuesDeApagar"?"#35d07f":b.tipo==="Diario"?"#a855f7":b.tipo==="Manual"?"#ffc145":"#f0556b";
+      var nombre=(b.nombre||"").replace(/'/g,"");
+      var btns=(config.identidad&&config.identidad.rol==="miembro")?"":'<div class="item-btns"><button class="mini-btn" style="background:var(--card2);color:var(--texto);" onclick="restaurarBackup(\''+nombre+'\')">Restaurar</button><button class="mini-btn" style="background:var(--card2);color:var(--texto);" onclick="abrirCarpeta(carpInst()+\'\\\\Backups\\\\'+b.tipo+'\')">Abrir</button></div>';
+      d.innerHTML='<div class="item-info"><span style="color:'+col+';display:flex;">'+ico("backups")+'</span><div><div>'+b.tipo+' &middot; '+b.mb+' MB</div><div class="item-sub">'+b.fecha+'</div></div></div>'+btns; cont.appendChild(d); });
+  }catch(e){ document.getElementById("listaBackups").innerHTML='<div style="color:var(--rojo);font-size:12px;">Error: '+e+'</div>'; }
+}
+function detectarCausaCrash(log){
+  if(/OutOfMemoryError/i.test(log)) return "Causa probable: memoria insuficiente. Sube la RAM en Ajustes.";
+  if(/Address already in use|Failed to bind/i.test(log)) return "Causa probable: el puerto esta ocupado (otro servidor abierto?).";
+  if(/UnsupportedClassVersion|Unsupported major|class file version/i.test(log)) return "Causa probable: version de Java incompatible con el .jar.";
+  if(/Could not load .*plugin|Invalid plugin|Error occurred while enabling/i.test(log)) return "Causa probable: un plugin esta fallando. Revisa la carpeta plugins.";
+  if(/level\.dat|world.*corrupt|Failed to load world/i.test(log)) return "Causa probable: mundo da\u00f1ado. Restaura un backup.";
+  if(/agree to the EULA|eula\.txt/i.test(log)) return "Causa probable: falta aceptar el EULA.";
+  return "Se detectaron errores en el log. Revisa las lineas de abajo.";
+}
+async function analizarCrash(){
+  toast("Analizando el ultimo log...","info");
+  try{
+    var log=await invoke("leer_archivo",{path:rutaInst()+"\\logs\\latest.log"});
+    if(!log || !log.trim()){ toast("No hay log para analizar.","info"); return; }
+    var lines=log.split("\n"), hits=[];
+    for(var i=0;i<lines.length;i++){ if(/Exception|Caused by:|ERROR\]|Could not|Failed to|OutOfMemoryError|Unable to|UnsupportedClassVersion/i.test(lines[i])){ hits.push(lines[i].trim()); } }
+    var resumen;
+    if(hits.length===0){ resumen="No se encontraron errores evidentes. El ultimo cierre pudo ser normal."; }
+    else { resumen='<b style="color:var(--amarillo);">'+detectarCausaCrash(log)+'</b><br><br>'+hits.slice(-12).map(function(x){return x.replace(/&/g,"&amp;").replace(/</g,"&lt;");}).join("<br>"); }
+    var h='<div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;">'+ico("alert")+'<h2 style="margin:0;font-size:17px;">Diagnostico del servidor</h2></div>';
+    h+='<div style="font-size:12px;max-height:52vh;overflow:auto;font-family:monospace;line-height:1.5;white-space:pre-wrap;">'+resumen+'</div>';
+    h+='<button class="act-btn act-save" style="width:100%;margin-top:12px;" onclick="cerrarOverlay()">Cerrar</button>';
+    overlay(h);
+  }catch(e){ toast("Error: "+e,"error"); }
+}
+function crearBackupAhora(){
+  confirmarAccion("Crear backup","Se hara una copia del mundo actual ahora mismo. Puede tardar segun el tamano. Continuar?",async function(){
+    toast("Creando backup...","info");
+    try{ var r=await invoke("ps_comando",{script:"& '"+RUTA_SCRIPTS+"\\_backup_manual.ps1'"});
+      if((r||"").indexOf("OK")>=0){ toast("Backup creado","ok"); cargarBackups(); } else { toast("No se pudo crear el backup","error"); }
+    }catch(e){ toast("Error: "+e,"error"); }
+  });
+}
+function restaurarBackup(nombre){
+  if(!nombre){ return; }
+  confirmarAccion("Restaurar backup","Esto reemplazara el mundo actual con esta copia. El servidor debe estar apagado. Continuar?",async function(){
+    toast("Restaurando "+nombre+"...","info");
+    try{ var r=await invoke("ps_comando",{script:"& '"+RUTA_SCRIPTS+"\\_nucleo.ps1' -Accion restaurar -Backup '"+nombre.replace(/'/g,"''")+"'"});
+      toast("Restauracion enviada. Revisa la consola.","ok"); }
+    catch(e){ toast("Error: "+e,"error"); }
+  });
+}
+function copiarIP(){ if(ipActual){ try{ navigator.clipboard.writeText(ipActual); }catch(e){} toast("Direccion copiada: "+ipActual,"ok"); } }
+function abrirCarpeta(sub){ var ruta=sub?RUTA_BASE+"\\"+sub:RUTA_BASE; try{ invoke("abrir_carpeta",{ruta:ruta}); }catch(e){} }
+
+// ===== MUNDO (server.properties) =====
+var CAMPOS=[{key:"motd",label:"MOTD",tipo:"text"},{key:"gamemode",label:"Modo",tipo:"select",opts:["survival","creative","adventure","spectator"]},
+{key:"difficulty",label:"Dificultad",tipo:"select",opts:["peaceful","easy","normal","hard"]},{key:"max-players",label:"Max jugadores",tipo:"text"},
+{key:"level-seed",label:"Seed",tipo:"text"},{key:"pvp",label:"PvP",tipo:"bool"},{key:"online-mode",label:"Premium (online-mode)",tipo:"bool"},
+{key:"view-distance",label:"Render dist",tipo:"text"},{key:"simulation-distance",label:"Sim dist",tipo:"text"},{key:"allow-flight",label:"Permitir volar",tipo:"bool"}];
+var propsRaw="";
+async function cargarConfig(){
+  try{ propsRaw=await invoke("leer_archivo",{path:rutaInst()+"\\server.properties"});
+    var props={}; propsRaw.split("\n").forEach(function(l){ l=l.replace("\r",""); if(l&&l.indexOf("=")>0&&l[0]!=="#"){ var i=l.indexOf("="); props[l.substring(0,i).trim()]=l.substring(i+1).trim(); } });
+    var c=document.getElementById("propsContainer"); c.innerHTML="";
+    CAMPOS.forEach(function(f){ var v=props[f.key]||"";
+      if(f.tipo==="bool"){ c.innerHTML+=tog("prop_"+f.key,f.label,"",v==="true"); return; }
+      var h='<div class="field"><label>'+f.label+'</label>';
+      if(f.tipo==="select"){ h+='<select id="prop_'+f.key+'">'; f.opts.forEach(function(o){ h+='<option'+(o===v?" selected":"")+'>'+o+'</option>'; }); h+='</select>'; }
+      else { h+='<input id="prop_'+f.key+'" value="'+v.replace(/"/g,"&quot;")+'">'; } h+='</div>'; c.innerHTML+=h; });
+    document.getElementById("motorActual").textContent="Motor actual: "+(config.servidor?config.servidor.jar_nombre:"?");
+    var moi=document.getElementById("prop_motd"); if(moi){ moi.oninput=renderMotdPreview; renderMotdPreview(); }
+    var pc=document.getElementById("propsContainer"); if(pc){ pc.oninput=function(){ var f=document.getElementById("fabGuardarProps"); if(f) f.style.display="flex"; }; pc.onchange=pc.oninput; }
+  }catch(e){}
+}
+var MC_COLORES={"0":"#000","1":"#00a","2":"#0a0","3":"#0aa","4":"#a00","5":"#a0a","6":"#fa0","7":"#aaa","8":"#555","9":"#55f","a":"#5f5","b":"#5ff","c":"#f55","d":"#f5f","e":"#ff5","f":"#fff"};
+function renderMotdPreview(){ var inp=document.getElementById("prop_motd"); var pv=document.getElementById("motdPreview"); var wrap=document.getElementById("motdPreviewWrap"); if(!inp||!pv){ return; } if(wrap) wrap.style.display="block";
+  var txt=inp.value||""; var html=""; var col="#fff",bold=false,ital=false,under=false; var i=0;
+  while(i<txt.length){ var ch=txt[i];
+    if(ch==="\u00a7" && i+1<txt.length){ var code=txt[i+1].toLowerCase();
+      if(MC_COLORES[code]){ col=MC_COLORES[code]; bold=ital=under=false; }
+      else if(code==="l") bold=true; else if(code==="o") ital=true; else if(code==="n") under=true; else if(code==="r"){ col="#fff"; bold=ital=under=false; }
+      i+=2; continue; }
+    var s='<span style="color:'+col+';'+(bold?"font-weight:bold;":"")+(ital?"font-style:italic;":"")+(under?"text-decoration:underline;":"")+'">'+ch.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/ /g,"&nbsp;")+'</span>';
+    html+=s; i++; }
+  pv.innerHTML=html||'<span style="color:#888;">(vacio)</span>'; }
+function insertarColorMotd(code){ var inp=document.getElementById("prop_motd"); if(!inp) return; var p=inp.selectionStart||inp.value.length; inp.value=inp.value.substring(0,p)+code+inp.value.substring(p); renderMotdPreview(); inp.focus(); }
+function filtrarProps(){ var q=(document.getElementById("propsBuscar").value||"").toLowerCase().trim(); var c=document.getElementById("propsAvanzado"); if(!c) return; var fs=c.querySelectorAll(".field"); for(var i=0;i<fs.length;i++){ var t=(fs[i].textContent||"").toLowerCase(); fs[i].style.display=(!q||t.indexOf(q)>=0)?"":"none"; } }
+async function guardarProps(){ var nuevas=propsRaw.split("\n").map(function(l){ var lc=l.replace("\r","");
+  for(var j=0;j<CAMPOS.length;j++){ if(lc.indexOf(CAMPOS[j].key+"=")===0){ var val=CAMPOS[j].tipo==="bool"?(gvb("prop_"+CAMPOS[j].key)?"true":"false"):document.getElementById("prop_"+CAMPOS[j].key).value; return CAMPOS[j].key+"="+val; } } return lc; });
+  var ok=await invoke("escribir_archivo",{path:rutaInst()+"\\server.properties",contenido:nuevas.join("\n")});
+  if(ok){ propsRaw=nuevas.join("\n"); toast("Propiedades guardadas. Reinicia para aplicar.","ok"); ocultarFab("fabGuardarProps"); } else { toast("Error al guardar","error"); } }
+var avV=false;
+function toggleAvanzado(){ avV=!avV; var c=document.getElementById("propsAvanzado"),b=document.getElementById("btnGuardarAv");
+  if(avV){ c.style.display="block"; b.style.display="flex"; c.innerHTML=""; var sb=document.getElementById("propsBuscar"); if(sb) sb.style.display="block";
+    propsRaw.split("\n").forEach(function(l){ l=l.replace("\r",""); if(l&&l.indexOf("=")>0&&l[0]!=="#"){ var i=l.indexOf("="),k=l.substring(0,i).trim(),v=l.substring(i+1).trim();
+      c.innerHTML+='<div class="field"><label>'+k+'</label><input id="av_'+k+'" value="'+v.replace(/"/g,"&quot;")+'"></div>'; } });
+  } else { c.style.display="none"; b.style.display="none"; var sb2=document.getElementById("propsBuscar"); if(sb2) sb2.style.display="none"; } }
+async function guardarAvanzado(){ var nuevas=propsRaw.split("\n").map(function(l){ var lc=l.replace("\r",""); if(lc&&lc.indexOf("=")>0&&lc[0]!=="#"){ var k=lc.substring(0,lc.indexOf("=")).trim(),el=document.getElementById("av_"+k); if(el) return k+"="+el.value; } return lc; });
+  var ok=await invoke("escribir_archivo",{path:rutaInst()+"\\server.properties",contenido:nuevas.join("\n")}); if(ok){ propsRaw=nuevas.join("\n"); toast("Guardado. Reinicia para aplicar.","ok"); } else toast("Error","error"); }
+async function generarServerIcon(){
+  var msg=document.getElementById("msgMotor"); msg.style.color="var(--acento)"; msg.textContent="Generando server-icon.png...";
+  try{ var r=await invoke("ps_comando",{script:"& '"+RUTA_SCRIPTS+"\\_server_icon.ps1'"});
+    if((r||"").indexOf("OK")>=0){ msg.style.color="var(--verde)"; msg.textContent="Icono creado (server-icon.png). Reinicia el servidor para verlo."; toast("Icono del servidor listo","ok"); }
+    else { msg.style.color="var(--rojo)"; msg.textContent="No se pudo generar el icono."; }
+  }catch(e){ msg.style.color="var(--rojo)"; msg.textContent="Error: "+e; }
+}
+var MOTORES=[["purpur","Purpur (recomendado)"],["paper","Paper"],["folia","Folia"],["vanilla","Vanilla"],["fabric","Fabric"],["forge","Forge"],["neoforge","NeoForge"],["spigot","Spigot/Bukkit"]];
+function renderMotor(){
+  var cont=document.getElementById("motorMgr"); if(!cont) return;
+  var motorAct=(config.servidor&&config.servidor.motor)||"purpur";
+  var h='<div class="subt">Motor del servidor</div>';
+  h+='<div class="field"><label>Tipo de motor</label><select id="motorSel" onchange="cargarVersionesMotor()">';
+  MOTORES.forEach(function(m){ h+='<option value="'+m[0]+'"'+(m[0]===motorAct?" selected":"")+'>'+m[1]+'</option>'; });
+  h+='</select></div>';
+  h+='<div class="field"><label>Version</label><select id="motorVerSel"><option>Cargando...</option></select></div>';
+  h+='<button class="act-btn act-save" onclick="instalarMotor()">Instalar esta version</button>';
+  h+='<button class="act-btn" style="background:var(--acento);color:#fff;" onclick="actualizarMotorUltima()">Actualizar a la ultima version</button>';
+  h+='<button class="act-btn" style="background:var(--card2);color:var(--texto);" onclick="elegirJar()">Subir motor personalizado (.jar)</button>';
+  h+='<div class="banner" id="motorNota" style="display:none;"></div>';
+  cont.innerHTML=h;
+  cargarVersionesMotor();
+}
+async function cargarVersionesMotor(){
+  var motor=document.getElementById("motorSel").value; var sel=document.getElementById("motorVerSel"); var nota=document.getElementById("motorNota");
+  sel.innerHTML='<option>Cargando...</option>';
+  try{
+    var r=await invoke("ps_comando",{script:"& '"+RUTA_SCRIPTS+"\\_motores.ps1' -Accion versiones -Motor '"+motor+"'"});
+    var d=JSON.parse(r);
+    if(!d.ok || !d.versiones || d.versiones.length===0){ sel.innerHTML='<option>(sin versiones)</option>'; return; }
+    sel.innerHTML=""; d.versiones.forEach(function(v){ sel.innerHTML+='<option value="'+v+'">'+v+'</option>'; });
+    if(nota){ if(d.auto){ nota.style.display="none"; } else { nota.style.display="block"; nota.textContent="Este motor no se instala solo (Forge/NeoForge/Spigot usan instalador). Descarga su .jar y usa 'Subir motor personalizado'."; } }
+  }catch(e){ sel.innerHTML='<option>(error)</option>'; }
+}
+async function guardarMotorJar(motor,jar,version){
+  if(!config.servidor)config.servidor={}; config.servidor.jar_nombre=jar; config.servidor.motor=motor;
+  // Guardar tambien en la instancia activa
+  var cp=config.servidor.carpeta_instancia||"Instancia";
+  if(config.instancias){ config.instancias.forEach(function(it){ if(it.carpeta===cp){ it.jar=jar; it.motor=motor; } }); }
+  try{ await invoke("escribir_archivo",{path:ARCHIVO_CONFIG,contenido:JSON.stringify(config,null,2)}); }catch(e){}
+  var el=document.getElementById("cfg_jar"); if(el) el.value=jar;
+  var ma=document.getElementById("motorActual"); if(ma) ma.textContent="Motor actual: "+jar+(version?(" ("+version+")"):"");
+}
+async function instalarMotor(){
+  var motor=document.getElementById("motorSel").value; var version=document.getElementById("motorVerSel").value;
+  if(!version||version.indexOf("(")===0){ toast("Elige una version","error"); return; }
+  var msg=document.getElementById("msgMotor"); msg.style.color="var(--acento)"; msg.textContent="Instalando "+motor+" "+version+"... puede tardar.";
+  toast("Instalando "+motor+" "+version+"...","info");
+  try{
+    var r=await invoke("ps_comando",{script:"& '"+RUTA_SCRIPTS+"\\_motores.ps1' -Accion instalar -Motor '"+motor+"' -Version '"+version+"' -CarpetaInstancia '"+carpInst()+"'"});
+    var d=JSON.parse(r);
+    if(d.ok){ await guardarMotorJar(motor,d.jar,d.version); msg.style.color="var(--verde)"; msg.textContent=motor+" "+version+" instalado ("+d.jar+"). Reinicia para aplicar."; toast("Motor instalado","ok"); }
+    else { msg.style.color="var(--rojo)"; msg.textContent="No se pudo instalar ("+(d.error||"?")+"). Si es Forge/NeoForge usa motor personalizado."; }
+  }catch(e){ msg.style.color="var(--rojo)"; msg.textContent="Error: "+e; }
+}
+async function actualizarMotorUltima(){
+  var motor=document.getElementById("motorSel").value;
+  var msg=document.getElementById("msgMotor"); msg.style.color="var(--acento)"; msg.textContent="Actualizando "+motor+" a la ultima version...";
+  toast("Actualizando motor...","info");
+  try{
+    var r=await invoke("ps_comando",{script:"& '"+RUTA_SCRIPTS+"\\_motores.ps1' -Accion actualizar -Motor '"+motor+"' -CarpetaInstancia '"+carpInst()+"'"});
+    var d=JSON.parse(r);
+    if(d.ok){ await guardarMotorJar(motor,d.jar,d.version); msg.style.color="var(--verde)"; msg.textContent=motor+" actualizado a "+d.version+". Reinicia para aplicar."; toast("Motor actualizado a "+d.version,"ok"); cargarVersionesMotor(); }
+    else { msg.style.color="var(--rojo)"; msg.textContent="No se pudo actualizar ("+(d.error||"?")+")."; }
+  }catch(e){ msg.style.color="var(--rojo)"; msg.textContent="Error: "+e; }
+}
+async function prepararServidor(){
+  var msg=document.getElementById("msgMotor"); msg.style.color="var(--acento)"; msg.textContent="Preparando servidor (descargando Purpur, EULA, RCON)... puede tardar 1-2 min...";
+  toast("Preparando servidor...","info");
+  try{
+    var r=await invoke("ps_comando",{script:"& '"+RUTA_SCRIPTS+"\\_primer_servidor.ps1'"});
+    var d=JSON.parse(r);
+    if(d.ok){ msg.style.color="var(--verde)"; msg.textContent="Listo: "+d.mensaje+". Ya puedes Iniciar."; toast("Servidor preparado","ok"); cargarConfig(); }
+    else { msg.style.color="var(--rojo)"; msg.textContent="No se pudo preparar ("+(d.error||"?")+")."; }
+  }catch(e){ msg.style.color="var(--rojo)"; msg.textContent="Error: "+e; }
+}
+async function descargarJar(t){ toast("Descargando "+t+"... puede tardar","info"); var msg=document.getElementById("msgMotor"); msg.style.color="var(--acento)"; msg.textContent="Descargando "+t+"...";
+  var r=await invoke("descargar_jar",{tipo:t,rutaInstancia:rutaInst()}); var err=r.indexOf("Error")>=0; msg.style.color=err?"var(--rojo)":"var(--verde)"; msg.textContent=r; toast(err?"Error descargando":r,err?"error":"ok"); }
+
+// ===== AJUSTES (Aternos-style cards) =====
+function inp(id,label,hint,val,ph){ var v=(val===undefined||val===null)?"":String(val); return '<div class="field"><label>'+label+'</label>'+(hint?'<div class="hint">'+hint+'</div>':'')+'<input id="'+id+'" value="'+v.replace(/"/g,"&quot;")+'" placeholder="'+(ph||"")+'"></div>'; }
+function sel(id,label,hint,val,opts,onchange){ var h='<div class="field"><label>'+label+'</label>'+(hint?'<div class="hint">'+hint+'</div>':'')+'<select id="'+id+'"'+(onchange?' onchange="'+onchange+'"':'')+'>';
+  opts.forEach(function(o){ h+='<option value="'+o[0]+'"'+(String(val)===o[0]?" selected":"")+'>'+o[1]+'</option>'; }); return h+'</select></div>'; }
+function tog(id,label,hint,checked,onchange){ return '<div class="tog-row"><div class="tog-txt"><label>'+label+'</label>'+(hint?'<div class="hint">'+hint+'</div>':'')+'</div><label class="switch"><input type="checkbox" id="'+id+'"'+(checked?' checked':'')+(onchange?' onchange="'+onchange+'"':'')+'><span class="slider-sw"></span></label></div>'; }
+function rng(id,label,min,max,val,unidad){ var v=val||min; return '<div class="rng-row"><div class="rng-head"><label>'+label+'</label><span class="rng-val" id="'+id+'_v">'+v+(unidad||'')+'</span></div><input type="range" id="'+id+'" min="'+min+'" max="'+max+'" value="'+v+'" oninput="document.getElementById(\''+id+'_v\').textContent=this.value+\''+(unidad||'')+'\'"></div>'; }
+function gvb(id){ var e=document.getElementById(id); return e?e.checked:false; }
+function renderAjustes(){
+  var id=config.identidad||{}, sv=config.servidor||{}, dc=config.discord||{}, red=config.red||{}, av=config.avanzado||{};
+  var ram=""; var mm=(sv.java_args||"").match(/-Xmx(\d+)G/); if(mm) ram=mm[1];
+  var h="";
+  h+='<div class="field" style="margin-bottom:12px;"><input id="ajustesBuscar" placeholder="Buscar ajuste..." oninput="filtrarAjustes()" aria-label="Buscar ajuste"></div>';
+  // Identidad
+  h+='<div class="cfg-card"><div class="cfg-card-head">'+ico("id")+'<span class="cfg-card-title">Identidad</span></div><div class="cfg-card-desc">Quien eres y que permisos tiene este PC.</div>';
+  h+=inp("cfg_nombre","Tu nombre","Aparece en Discord cuando prendes el server.",id.nombre_usuario);
+  h+=inp("cfg_estepc","Nombre de este PC","Ej: Mi PC, Sala, Casa...",id.este_pc);
+  var rolTxt=id.rol==="owner"?"Owner (tu creaste el servidor: control total)":id.rol==="operador"?"Operador (control total del servidor)":"Miembro (prender/apagar)";
+  h+='<div class="field"><label>Tu rol</label><div class="hint">'+(id.rol==="owner"?"Eres el dueno del servidor.":"El owner asigna los roles; no se cambia aqui.")+'</div><div class="banner" style="margin:0;">'+ico(id.rol==="owner"?"crown":id.rol==="operador"?"tools":"players")+' '+rolTxt+'</div></div>';
+  h+='</div>';
+  // Servidor
+  h+='<div class="cfg-card"><div class="cfg-card-head">'+ico("server")+'<span class="cfg-card-title">Servidor</span></div><div class="cfg-card-desc">Recursos y archivo del servidor.</div>';
+  h+=rng("cfg_ram","RAM maxima",1,16,parseInt(ram)||4," GB");
+  if(saludExtraCache && saludExtraCache.ram_total_gb){ var tot=Math.round(saludExtraCache.ram_total_gb); var rec=Math.max(2,Math.min(Math.floor(tot/2),tot-2)); h+='<div class="hint" style="margin:-6px 0 10px;">Tu sistema tiene ~'+tot+' GB. Recomendado para el server: <b>'+rec+' GB</b> (deja algo para Windows).</div>'; }
+  h+='<div class="field"><label>Archivo .jar (motor del servidor)</label><div class="hint">El .jar del servidor (ej: purpur.jar). Usa Examinar para elegirlo del explorador.</div><div style="display:flex;gap:8px;"><input id="cfg_jar" value="'+String(sv.jar_nombre||"").replace(/"/g,"&quot;")+'" style="flex:1;"><button class="mini-btn" style="background:var(--card2);color:var(--texto);" onclick="elegirJar()">Examinar</button></div></div>';
+  h+=inp("cfg_puerto","Puerto","Normalmente 25565.",sv.puerto);
+  h+='</div>';
+  // Red
+  h+='<div class="cfg-card"><div class="cfg-card-head">'+ico("net")+'<span class="cfg-card-title">Red - Como entran tus amigos</span></div>';
+  h+='<div class="cfg-card-desc">Elige la forma mas comoda para que tus amigos se conecten. Si no sabes cual, deja Playit.</div>';
+  h+=sel("cfg_metodo","Forma de conexion","",red.metodo||"playit",[["playit","Playit - lo mas facil (recomendado)"],["manual","Tengo una IP o dominio propio"],["ninguno","Solo en mi red local (misma WiFi)"],["duckdns","DuckDNS (avanzado)"]],"actualizarMetodoRed()");
+  h+='<div class="banner" id="bannerRed"></div>';
+  var pInst=saludExtraCache && saludExtraCache.playit;
+  h+='<div id="red_playit">';
+  if(pInst){ h+='<div class="banner" style="margin-top:0;">'+ico("check")+' Playit ya esta instalado.</div>'; h+='<button class="act-btn act-save" style="width:100%;" onclick="configurarPlayit()">'+ico("net")+' Configurar / vincular Playit</button>'; }
+  else { h+='<button class="act-btn act-save" style="width:100%;" onclick="instalarPlayit()">'+ico("download")+' Instalar Playit (1 clic)</button>'; }
+  h+=inp("cfg_playit","Tu direccion de Playit","La primera vez que vincules, Playit te da una direccion (algo.playit.gg). Pegala aqui para compartirla.",red.playit_direccion,"algo.playit.gg")+'</div>';
+  h+='<div id="red_duckdns">'+inp("cfg_duck_dom","DuckDNS dominio","Solo el nombre, sin .duckdns.org",red.duckdns_dominio)+inp("cfg_duck_tok","DuckDNS token","Lo da duckdns.org en tu cuenta.",red.duckdns_token)+'<div class="hint">Requiere abrir el puerto 25565 en tu router.</div></div>';
+  h+='<div id="red_manual">'+inp("cfg_ipman","Tu IP o dominio","La direccion que escribiran tus amigos.",red.ip_manual,"ej: 123.45.67.89:25565")+'</div>';
+  h+=inp("cfg_dirpub","Direccion para compartir (opcional)","Si quieres forzar una direccion concreta para el boton Compartir. Si lo dejas vacio, se usa la de arriba.",red.direccion_publica,"se calcula sola");
+  h+='</div>';
+  // Discord
+  h+='<div class="cfg-card"><div class="cfg-card-head">'+ico("discord")+'<span class="cfg-card-title">Discord</span></div><div class="cfg-card-desc">Notificaciones automaticas al canal.</div>';
+  h+=tog("cfg_usardc","Usar Discord","Enviar avisos al canal.",dc.usar!==false,"actualizarDiscord()");
+  h+='<div id="dc_opciones">';
+  h+=inp("cfg_webhook","Webhook URL","Lo creas en Ajustes del canal de Discord > Integraciones > Webhooks.",dc.webhook_url);
+  h+=inp("cfg_botname","Nombre del bot","",dc.nombre_bot);
+  h+=tog("cfg_notif_estado","Notificar inicio/apagado","",dc.notificar_inicio!==false);
+  h+=tog("cfg_notif_jug","Notificar entradas/salidas","",dc.notificar_jugadores!==false);
+  h+=tog("cfg_status_per","Reporte de estado periodico","Publica cada cierto tiempo cuantos jugadores hay. Util pero puede llenar el canal. Apagado por defecto.",dc.status_periodico===true,"actualizarStatusPer()");
+  h+='<div id="status_per_int">'+rng("cfg_status_min","Reportar cada",10,120,parseInt(dc.status_intervalo_min)||30," min")+'</div>';
+  h+='<div class="banner">Mensajes personalizables. Variables: {usuario} {pc} {puerto} {ip} {jugador}</div>';
+  h+=inp("cfg_msg_inicio","Mensaje al iniciar","",dc.mensaje_inicio);
+  h+=inp("cfg_msg_apagado","Mensaje al apagar","",dc.mensaje_apagado);
+  h+=inp("cfg_msg_reinicio","Mensaje al reiniciar","",dc.mensaje_reinicio);
+  h+=inp("cfg_msg_join","Mensaje cuando alguien entra","",dc.mensaje_join);
+  h+=inp("cfg_msg_leave","Mensaje cuando alguien sale","",dc.mensaje_leave);
+  h+='</div></div>';
+  // Avanzado
+  h+='<div class="cfg-card"><div class="cfg-card-head">'+ico("sliders")+'<span class="cfg-card-title">Avanzado</span></div><div class="cfg-card-desc">Proteccion y automatizacion.</div>';
+  h+=tog("cfg_autosave","Auto-guardado","Guarda el mundo periodicamente para no perder progreso si crashea.",av.autosave_habilitado!==false);
+  h+=rng("cfg_autosave_min","Auto-guardar cada",5,60,parseInt(av.autosave_intervalo_min)||15," min");
+  h+=tog("cfg_autorestart","Auto-reinicio si crashea","Si el server se cae, lo levanta solo.",av.auto_reinicio_crash!==false);
+  h+=tog("cfg_borrar","Miembros: borrar mundo al apagar","Anti-trampa: borra los archivos del PC del miembro al terminar.",av.borrar_mundo_miembros!==false);
+  h+='</div>';
+  // Nube
+  var nb=config.nube||{};
+  h+='<div class="cfg-card"><div class="cfg-card-head">'+ico("globe")+'<span class="cfg-card-title">Nube - Donde se guarda el mundo</span></div>';
+  h+='<div class="cfg-card-desc">El mundo viaja por la nube para que cualquier PC pueda hostearlo. Si solo juegas en este PC, activa el modo local y olvidate de la nube.</div>';
+  h+=tog("cfg_local","Modo local (sin nube)","Sin Backblaze ni turnos. El mundo se queda en este PC. Puedes compartir por red igual.",config.local===true,"actualizarLocalUI()");
+  h+='<div id="nube_bloque">';
+  h+='<div class="banner" id="bannerNube"></div>';
+  h+=sel("cfg_nube_prov","Proveedor","",nb.proveedor||"Backblaze B2",[["Backblaze B2","Backblaze B2 (recomendado, 10GB gratis)"],["Amazon S3","Amazon S3"],["Wasabi","Wasabi"],["Cloudflare R2","Cloudflare R2"],["Storj","Storj"],["Google Drive","Google Drive"],["Dropbox","Dropbox"],["OneDrive","OneDrive"],["Otro","Otro (rclone manual)"]],"actualizarNubeUI()");
+  h+='<button class="mini-btn" style="width:100%;margin:-4px 0 10px;background:var(--card2);color:var(--texto);" onclick="asistenteNubeGuiado()">'+ico("info")+' Como configurar este proveedor (guia paso a paso)</button>';
+  h+=inp("cfg_nube_remoto","Nombre del remoto","Etiqueta interna para rclone (sin espacios).",nb.rclone_remoto||"minube");
+  h+=inp("cfg_nube_bucket","Bucket / carpeta raiz","El contenedor donde se guarda todo.",nb.bucket);
+  h+=rng("cfg_nube_limite","Limite de almacenamiento",1,200,parseInt(nb.limite_gb)||10," GB");
+  if(id.rol!=="miembro"){
+  // Credenciales rapidas (B2 / S3)
+  h+='<div id="nube_cred">';
+  h+=inp("cfg_nube_cuenta","Key ID / Access Key","",  "" ,"tu keyID");
+  h+=inp("cfg_nube_clave","Application Key / Secret","Por seguridad no se guarda en config; va al rclone.conf.","","tu clave secreta");
+  h+='<div id="nube_s3extra">'+inp("cfg_nube_region","Region","Solo S3 (ej: us-east-1).","","us-east-1")+inp("cfg_nube_endpoint","Endpoint","Solo S3/R2/Wasabi/Storj (URL del servicio).","","")+'</div>';
+  h+='<button class="mini-btn" style="background:var(--acento);width:100%;margin-top:6px;" onclick="conectarNube()">'+ico("globe")+' Guardar credenciales y conectar</button>';
+  h+='</div>';
+  // OAuth (Drive/Dropbox/OneDrive/Otro)
+  h+='<div id="nube_oauth"><div class="banner">Este proveedor usa inicio de sesion (OAuth). Pulsa el boton para abrir el asistente de rclone, que abrira tu navegador para autorizar. Cuando termine, vuelve aqui.</div>';
+  h+='<button class="mini-btn" style="background:var(--acento);width:100%;" onclick="asistenteNube()">'+ico("net")+' Abrir asistente de rclone</button></div>';
+  h+='<div class="msg" id="msgNube"></div>';
+  } else {
+  h+='<div class="banner">La nube la configura el owner. Tú ya la recibiste al vincularte con el codigo del grupo, asi que no necesitas tocar nada aqui.</div>';
+  }
+  h+='</div>';
+  h+='</div>';
+  // Actualizaciones
+  var ac=config.actualizaciones||{};
+  h+='<div class="cfg-card"><div class="cfg-card-head">'+ico("download")+'<span class="cfg-card-title">Actualizaciones</span></div>';
+  h+='<div class="cfg-card-desc">Skeledex se mantiene al dia solo, desde el canal oficial. No necesitas hacer nada; tu mundo y tu nube no se tocan.</div>';
+  h+=tog("cfg_auto_update","Actualizar automaticamente","Recomendado. Al abrir el panel busca mejoras y las aplica solas.",ac.auto!==false);
+  h+='<div class="msg" id="msgUpdate"></div></div>';
+  // Mantenimiento
+  h+='<div class="cfg-card"><div class="cfg-card-head">'+ico("tools")+'<span class="cfg-card-title">Mantenimiento</span></div><div class="cfg-card-desc">Tareas automaticas de Windows y utilidades. Las tareas piden permiso de administrador (UAC) una vez.</div>';
+  h+='<div class="cp-row" style="gap:8px;flex-wrap:wrap;border:none;">';
+  h+='<button class="mini-btn" onclick="instalarTarea(\'reinicio\')">'+ico("restart")+' Reinicio diario 5AM</button>';
+  h+='<button class="mini-btn" onclick="instalarTarea(\'backup\')">'+ico("backups")+' Backup diario 4AM</button>';
+  h+='<button class="mini-btn" onclick="quitarTareas()">'+ico("trash")+' Quitar tareas</button>';
+  h+='<button class="mini-btn" style="background:var(--card2);color:var(--texto);" onclick="exportarConfig()">'+ico("upload")+' Exportar config</button>';
+  h+='<button class="mini-btn" style="background:var(--card2);color:var(--texto);" onclick="importarConfig()">'+ico("download")+' Importar config</button>';
+  h+='</div><div class="msg" id="msgMant"></div></div>';
+  h+='<button class="act-btn act-save" onclick="guardarAjustes()">'+ico("save")+' Guardar configuracion</button><div class="msg" id="msgAjustes"></div>';
+  document.getElementById("ajustesScroll").innerHTML=h;
+  actualizarMetodoRed(); actualizarDiscord(); bannerRed(); actualizarNubeUI(); actualizarStatusPer(); actualizarLocalUI();
+  var sc=document.getElementById("ajustesScroll"); if(sc){ sc.oninput=marcarCambioAjustes; sc.onchange=marcarCambioAjustes; }
+  ocultarFab("fabGuardar");
+}
+function marcarCambioAjustes(){ var f=document.getElementById("fabGuardar"); if(f) f.style.display="flex"; }
+function ocultarFab(id){ var f=document.getElementById(id); if(f) f.style.display="none"; }
+function bannerRed(){ var m=gv("cfg_metodo"); var txt="";
+  if(m==="playit") txt="Lo mas facil: no tocas el router. Instala Playit, y al iniciar te da una direccion (algo.playit.gg) que compartes a tus amigos.";
+  else if(m==="duckdns") txt="Avanzado: tu dominio apunta al PC activo. Necesitas abrir el puerto 25565 en tu router. Tus amigos usan siempre el mismo dominio.";
+  else if(m==="manual") txt="Ya tienes una IP fija o dominio: escribela y eso es lo que compartes.";
+  else txt="Solo LAN: tus amigos en la MISMA red/WiFi entran con tu IP local (algo como 192.168.x.x). Fuera de tu casa no funciona.";
+  var b=document.getElementById("bannerRed"); if(b) b.textContent=txt; }
+function actualizarMetodoRed(){ var m=gv("cfg_metodo");
+  var p=document.getElementById("red_playit"),d=document.getElementById("red_duckdns"),mn=document.getElementById("red_manual");
+  if(p)p.style.display=(m==="playit")?"block":"none"; if(d)d.style.display=(m==="duckdns")?"block":"none"; if(mn)mn.style.display=(m==="manual")?"block":"none"; bannerRed(); }
+function actualizarDiscord(){ var o=document.getElementById("dc_opciones"); if(o) o.style.display=gvb("cfg_usardc")?"block":"none"; }
+function actualizarStatusPer(){ var o=document.getElementById("status_per_int"); if(o) o.style.display=gvb("cfg_status_per")?"block":"none"; }
+// Mapa proveedor -> {tipo rclone, esOAuth, provider_s3, endpoint sugerido}
+function infoProveedor(p){
+  switch(p){
+    case "Backblaze B2": return {tipo:"b2", oauth:false, s3:"", endpoint:""};
+    case "Amazon S3":    return {tipo:"s3", oauth:false, s3:"AWS", endpoint:""};
+    case "Wasabi":       return {tipo:"s3", oauth:false, s3:"Wasabi", endpoint:"s3.wasabisys.com"};
+    case "Cloudflare R2":return {tipo:"s3", oauth:false, s3:"Cloudflare", endpoint:""};
+    case "Storj":        return {tipo:"s3", oauth:false, s3:"Storj", endpoint:"gateway.storjshare.io"};
+    case "Google Drive": return {tipo:"drive", oauth:true, s3:"", endpoint:""};
+    case "Dropbox":      return {tipo:"dropbox", oauth:true, s3:"", endpoint:""};
+    case "OneDrive":     return {tipo:"onedrive", oauth:true, s3:"", endpoint:""};
+    default:             return {tipo:"", oauth:true, s3:"", endpoint:""};
+  }
+}
+function actualizarLocalUI(){ var on=gvb("cfg_local"); var b=document.getElementById("nube_bloque"); if(b) b.style.display=on?"none":"block"; }
+var GUIAS={
+  "Backblaze B2":{link:"https://www.backblaze.com/sign-up/cloud-storage",pasos:["Crea una cuenta gratis en Backblaze B2 (10 GB gratis).","En el menu, ve a 'Buckets' y crea un bucket (nombre unico, privado).","Ve a 'Application Keys' y pulsa 'Add a New Application Key'.","Copia el keyID y el applicationKey que te muestra.","Vuelve aqui: proveedor Backblaze B2, escribe el bucket y pega keyID + applicationKey, y pulsa Conectar."]},
+  "Amazon S3":{link:"https://aws.amazon.com/s3/",pasos:["Crea una cuenta en AWS (aws.amazon.com).","En la consola, abre el servicio S3 y crea un bucket (elige una region, ej: us-east-1).","Abre el servicio IAM > Usuarios > Crear usuario, con permiso 'AmazonS3FullAccess'.","En ese usuario, crea una 'Access key' (tipo: aplicacion). Copia Access Key ID y Secret.","Vuelve aqui: proveedor Amazon S3, escribe bucket y region, pega Access Key + Secret, y Conectar."],link2:"https://console.aws.amazon.com/iam/"},
+  "Wasabi":{link:"https://wasabi.com/",pasos:["Crea cuenta en Wasabi.","Crea un bucket y anota su region/endpoint (ej: s3.wasabisys.com).","En 'Access Keys' crea una llave: Access Key + Secret.","Aqui: proveedor Wasabi, bucket + endpoint, pega las llaves y Conectar."]},
+  "Cloudflare R2":{link:"https://dash.cloudflare.com/?to=/:account/r2",pasos:["Activa R2 en tu cuenta de Cloudflare.","Crea un bucket.","Crea un token de API R2 (Access Key + Secret) y copia tu endpoint (https://<accountid>.r2.cloudflarestorage.com).","Aqui: proveedor Cloudflare R2, bucket + endpoint, pega las llaves y Conectar."]},
+  "Storj":{link:"https://storj.io/",pasos:["Crea cuenta en Storj.","Crea un bucket.","Genera credenciales S3 (Access Key + Secret) y usa el endpoint gateway.storjshare.io.","Aqui: proveedor Storj, bucket, pega las llaves y Conectar."]},
+  "Google Drive":{link:"https://www.google.com/drive/",pasos:["Google Drive usa inicio de sesion (OAuth).","Pulsa 'Abrir asistente de rclone', elige Google Drive y sigue los pasos en tu navegador.","No necesitas pegar llaves a mano."]},
+  "Dropbox":{link:"https://www.dropbox.com/",pasos:["Dropbox usa inicio de sesion (OAuth).","Pulsa 'Abrir asistente de rclone', elige Dropbox y autoriza en tu navegador."]},
+  "OneDrive":{link:"https://onedrive.live.com/",pasos:["OneDrive usa inicio de sesion (OAuth).","Pulsa 'Abrir asistente de rclone', elige OneDrive y autoriza en tu navegador."]},
+  "Otro":{link:"https://rclone.org/overview/",pasos:["rclone soporta decenas de proveedores.","Pulsa 'Abrir asistente de rclone' y sigue su configuracion para tu proveedor."]}
+};
+function asistenteNubeGuiado(){
+  var p=gv("cfg_nube_prov")||"Backblaze B2"; var g=GUIAS[p]||GUIAS["Backblaze B2"];
+  var h='<div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">'+ico("net")+'<h2 style="margin:0;font-size:17px;">Configurar '+p+'</h2></div>';
+  h+='<ol style="font-size:13px;line-height:1.6;padding-left:18px;">';
+  g.pasos.forEach(function(s){ h+='<li>'+s.replace(/</g,"&lt;")+'</li>'; });
+  h+='</ol>';
+  h+='<button class="act-btn act-save" style="width:100%;" onclick="abrirEnlace(\''+g.link+'\')">'+ico("globe")+' Abrir la pagina de '+p+'</button>';
+  if(g.link2){ h+='<button class="act-btn" style="width:100%;background:var(--card2);color:var(--texto);" onclick="abrirEnlace(\''+g.link2+'\')">Abrir consola de credenciales (IAM)</button>'; }
+  h+='<button class="act-btn" style="width:100%;background:var(--card2);color:var(--texto);" onclick="cerrarOverlay()">Entendido</button>';
+  overlay(h);
+}
+function abrirEnlace(url){ try{ invoke("ps_comando",{script:"Start-Process '"+url.replace(/'/g,"")+"'"}); toast("Abriendo en el navegador...","info"); }catch(e){} }
+function actualizarNubeUI(){
+  var p=gv("cfg_nube_prov"); var inf=infoProveedor(p);
+  var cred=document.getElementById("nube_cred"), oauth=document.getElementById("nube_oauth"), s3x=document.getElementById("nube_s3extra"), bn=document.getElementById("bannerNube");
+  if(cred) cred.style.display=inf.oauth?"none":"block";
+  if(oauth) oauth.style.display=inf.oauth?"block":"none";
+  if(s3x) s3x.style.display=(inf.tipo==="s3")?"block":"none";
+  if(bn){ bn.textContent = inf.oauth ? (p+": se configura con inicio de sesion mediante el asistente de rclone.") : (p+": pega tu Key ID y clave secreta y pulsa conectar. Backblaze da 10GB gratis."); }
+}
+async function conectarNube(){
+  var msg=document.getElementById("msgNube"); msg.style.color="var(--acento)"; msg.textContent="Conectando...";
+  var p=gv("cfg_nube_prov"); var inf=infoProveedor(p);
+  var datos={ tipo:inf.tipo, proveedor_s3:inf.s3, remoto:gv("cfg_nube_remoto").trim(), bucket:gv("cfg_nube_bucket").trim(), cuenta:gv("cfg_nube_cuenta").trim(), clave:gv("cfg_nube_clave").trim(), region:gv("cfg_nube_region").trim(), endpoint:gv("cfg_nube_endpoint").trim() };
+  if(!datos.remoto||!datos.bucket){ msg.style.color="var(--rojo)"; msg.textContent="Falta nombre de remoto o bucket."; return; }
+  if(!datos.cuenta||!datos.clave){ msg.style.color="var(--rojo)"; msg.textContent="Faltan las credenciales."; return; }
+  try{
+    await invoke("escribir_archivo",{path:RUTA_ESTADO+"\\_nube_tmp.json",contenido:JSON.stringify(datos)});
+    var r=await invoke("ps_comando",{script:"& '"+RUTA_SCRIPTS+"\\_nube_conectar.ps1'"});
+    if(r.indexOf("OK")===0){
+      msg.style.color="var(--verde)"; msg.textContent="Conectado correctamente.";
+      // Guardar datos no sensibles en config
+      if(!config.nube)config.nube={}; config.nube.proveedor=p; config.nube.tipo_rclone=inf.tipo; config.nube.rclone_remoto=datos.remoto; config.nube.bucket=datos.bucket; config.nube.limite_gb=parseInt(gv("cfg_nube_limite"))||10;
+      await invoke("escribir_archivo",{path:ARCHIVO_CONFIG,contenido:JSON.stringify(config,null,2)});
+      toast("Nube conectada y guardada","ok");
+    } else { msg.style.color="var(--rojo)"; msg.textContent="No se pudo conectar: "+r.replace("ERROR:",""); }
+  }catch(e){ msg.style.color="var(--rojo)"; msg.textContent="Error: "+e; }
+}
+async function asistenteNube(){
+  toast("Abriendo asistente de rclone...","info");
+  var ps="$r='C:\\\\rclone\\\\rclone.exe'; if(-not (Test-Path $r)){$r='rclone'}; Start-Process cmd.exe -ArgumentList '/k',('\"'+$r+'\" config')";
+  try{ await invoke("ps_comando",{script:ps}); }
+  catch(e){ toast("Error: "+e,"error"); }
+}
+async function instalarTarea(tipo){
+  var msg=document.getElementById("msgMant"); msg.style.color="var(--acento)";
+  var nombre = tipo==="reinicio" ? "Skeledex_ReinicioDiario" : "Skeledex_BackupDiario";
+  var script = tipo==="reinicio" ? "_reinicio_programado.ps1" : "_backup_diario.ps1";
+  var hora = tipo==="reinicio" ? "5:00AM" : "4:00AM";
+  msg.textContent="Pidiendo permiso de administrador...";
+  var ps="$a=New-ScheduledTaskAction -Execute 'PowerShell.exe' -Argument '-NoProfile -ExecutionPolicy Bypass -WindowStyle Hidden -File \""+RUTA_SCRIPTS+"\\"+script+"\"'; $t=New-ScheduledTaskTrigger -Daily -At "+hora+"; $s=New-ScheduledTaskSettingsSet -AllowStartIfOnBatteries -DontStopIfGoingOnBatteries -StartWhenAvailable; Register-ScheduledTask -TaskName '"+nombre+"' -Action $a -Trigger $t -Settings $s -RunLevel Highest -Force";
+  try{ await invoke("ps_elevado",{script:ps}); msg.style.color="var(--verde)"; msg.textContent="Tarea '"+nombre+"' instalada (acepta el UAC)."; toast("Tarea programada","ok"); }
+  catch(e){ msg.style.color="var(--rojo)"; msg.textContent="Error: "+e; }
+}
+async function quitarTareas(){
+  var msg=document.getElementById("msgMant"); msg.style.color="var(--acento)"; msg.textContent="Quitando tareas...";
+  var ps="Unregister-ScheduledTask -TaskName 'Skeledex_ReinicioDiario' -Confirm:$false -ErrorAction SilentlyContinue; Unregister-ScheduledTask -TaskName 'Skeledex_BackupDiario' -Confirm:$false -ErrorAction SilentlyContinue";
+  try{ await invoke("ps_elevado",{script:ps}); msg.style.color="var(--verde)"; msg.textContent="Tareas quitadas (acepta el UAC)."; }
+  catch(e){ msg.style.color="var(--rojo)"; msg.textContent="Error: "+e; }
+}
+async function exportarConfig(){
+  var msg=document.getElementById("msgMant");
+  try{ var raw=await invoke("leer_archivo",{path:ARCHIVO_CONFIG}); var dest=RUTA_BASE+"\\Backups\\config_export.json";
+    await invoke("escribir_archivo",{path:dest,contenido:raw}); msg.style.color="var(--verde)"; msg.textContent="Config exportada a Backups\\config_export.json"; abrirCarpeta("Backups"); toast("Config exportada","ok");
+  }catch(e){ msg.style.color="var(--rojo)"; msg.textContent="Error: "+e; }
+}
+function importarConfig(){
+  confirmarAccion("Importar configuracion","Se reemplazara tu config actual con Backups\\config_export.json y se reiniciara el panel. Continuar?",async function(){
+    try{ var raw=await invoke("leer_archivo",{path:RUTA_BASE+"\\Backups\\config_export.json"});
+      if(!raw||!raw.trim()){ toast("No hay config_export.json en Backups","error"); return; }
+      JSON.parse(raw); await invoke("escribir_archivo",{path:ARCHIVO_CONFIG,contenido:raw});
+      toast("Config importada. Reiniciando...","ok"); setTimeout(function(){location.reload();},800);
+    }catch(e){ toast("Error o JSON invalido: "+e,"error"); }
+  });
+}
+async function publicarUpdate(){
+  var msg=document.getElementById("msgMant"); msg.style.color="var(--acento)"; msg.textContent="Abriendo el publicador de versiones...";
+  try{ await invoke("ps_comando",{script:"Start-Process -FilePath '"+RUTA_BASE+"\\PublicarVersionGlobal.bat'"}); msg.style.color="var(--verde)"; msg.textContent="Se abrio el publicador en una ventana aparte (sigue los pasos)."; }
+  catch(e){ msg.style.color="var(--rojo)"; msg.textContent="Error: "+e; }
+}
+function gv(id){ var e=document.getElementById(id); return e?e.value:""; }
+async function elegirJar(){
+  try{
+    var ini=rutaInst().replace(/'/g,"''");
+    var r=await invoke("ps_comando",{script:"& '"+RUTA_SCRIPTS+"\\_elegir_archivo.ps1' -Filtro 'Archivos JAR (*.jar)|*.jar|Todos (*.*)|*.*' -Titulo 'Selecciona el .jar del servidor' -Inicial '"+ini+"'"});
+    r=(r||"").trim(); if(!r){ return; }
+    var base=r.split("\\").pop().split("/").pop();
+    // Si el .jar no esta en la carpeta de la instancia, copiarlo ahi
+    await invoke("ps_comando",{script:"$d='"+rutaInst().replace(/'/g,"''")+"'; if(-not (Test-Path $d)){New-Item $d -ItemType Directory -Force|Out-Null}; $dest=Join-Path $d '"+base.replace(/'/g,"''")+"'; if(-not (Test-Path $dest)){ Copy-Item -LiteralPath '"+r.replace(/'/g,"''")+"' -Destination $dest -Force }"});
+    var el=document.getElementById("cfg_jar"); if(el) el.value=base;
+    toast("Motor seleccionado: "+base,"ok");
+  }catch(e){ toast("Error: "+e,"error"); }
+}
+function filtrarAjustes(){ var q=(gv("ajustesBuscar")||"").toLowerCase().trim(); var cards=document.querySelectorAll("#ajustesScroll .cfg-card");
+  for(var i=0;i<cards.length;i++){ var t=(cards[i].textContent||"").toLowerCase(); cards[i].style.display=(!q||t.indexOf(q)>=0)?"":"none"; } }
+async function guardarAjustes(){
+  try{
+    // Validacion
+    if(!gv("cfg_nombre").trim()){ toast("Falta tu nombre","error"); return; }
+    if(!gv("cfg_estepc").trim()){ toast("Falta el nombre de este PC","error"); return; }
+    var ramN=parseInt(gv("cfg_ram")); if(gv("cfg_ram") && (isNaN(ramN)||ramN<1||ramN>64)){ toast("RAM invalida (1-64 GB)","error"); return; }
+    if(gvb("cfg_usardc") && gv("cfg_webhook").indexOf("discord.com/api/webhooks/")<0){ toast("El webhook de Discord no parece valido","error"); return; }
+    config.identidad.nombre_usuario=gv("cfg_nombre"); config.identidad.este_pc=gv("cfg_estepc");
+    var ram=gv("cfg_ram")||"4"; config.servidor.java_args="-Xms2G -Xmx"+ram+"G -XX:+UseG1GC"; config.servidor.jar_nombre=gv("cfg_jar"); config.servidor.puerto=parseInt(gv("cfg_puerto"))||25565;
+    if(!config.red)config.red={}; config.red.metodo=gv("cfg_metodo"); config.red.direccion_publica=gv("cfg_dirpub"); config.red.playit_direccion=gv("cfg_playit"); config.red.duckdns_dominio=gv("cfg_duck_dom"); config.red.duckdns_token=gv("cfg_duck_tok"); config.red.ip_manual=gv("cfg_ipman");
+    if(!config.discord)config.discord={}; config.discord.usar=gvb("cfg_usardc"); config.discord.webhook_url=gv("cfg_webhook"); config.discord.nombre_bot=gv("cfg_botname");
+    config.discord.notificar_inicio=gvb("cfg_notif_estado"); config.discord.notificar_apagado=gvb("cfg_notif_estado"); config.discord.notificar_jugadores=gvb("cfg_notif_jug");
+    config.discord.status_periodico=gvb("cfg_status_per"); config.discord.status_intervalo_min=parseInt(gv("cfg_status_min"))||30;
+    config.discord.mensaje_inicio=gv("cfg_msg_inicio"); config.discord.mensaje_apagado=gv("cfg_msg_apagado"); config.discord.mensaje_reinicio=gv("cfg_msg_reinicio"); config.discord.mensaje_join=gv("cfg_msg_join"); config.discord.mensaje_leave=gv("cfg_msg_leave");
+    if(!config.avanzado)config.avanzado={}; config.avanzado.autosave_habilitado=gvb("cfg_autosave"); config.avanzado.autosave_intervalo_min=parseInt(gv("cfg_autosave_min"))||15; config.avanzado.auto_reinicio_crash=gvb("cfg_autorestart"); config.avanzado.borrar_mundo_miembros=gvb("cfg_borrar");
+    if(!config.nube)config.nube={}; if(gv("cfg_nube_limite")) config.nube.limite_gb=parseInt(gv("cfg_nube_limite"))||10;
+    config.local=gvb("cfg_local");
+    if(!config.actualizaciones)config.actualizaciones={auto:true,canal:"github",repo:"MasterXDXDX/Skeledex"}; config.actualizaciones.auto=gvb("cfg_auto_update");
+    var ok=await invoke("escribir_archivo",{path:ARCHIVO_CONFIG,contenido:JSON.stringify(config,null,2)});
+    if(ok){ toast("Configuracion guardada","ok"); document.getElementById("userInfo").textContent=config.identidad.nombre_usuario+" | "+config.identidad.este_pc; resolverIP(); aplicarRol(); ocultarFab("fabGuardar"); }
+    else toast("Error al guardar","error");
+  }catch(e){ toast("Error: "+e,"error"); }
+}
+function renderEquipo(){
+  var r=config.identidad?config.identidad.rol:"--"; var icn=r==="owner"?"crown":r==="operador"?"tools":"players";
+  var esOwner=(r==="owner");
+  var h='<div class="cfg-card"><div class="cfg-card-head">'+ico(icn)+'<span class="cfg-card-title">Tu rol: '+r+'</span></div><div class="cfg-card-desc">'+(config.identidad?config.identidad.nombre_usuario+" en "+config.identidad.este_pc:"")+'</div></div>';
+  // CODIGO DE VINCULACION
+  if(esOwner){
+    h+='<div class="cfg-card"><div class="cfg-card-head">'+ico("tag")+'<span class="cfg-card-title">Codigo de invitacion</span></div>';
+    h+='<div class="cfg-card-desc">Genera un codigo y compartelo con tu amigo. Al pegarlo en su panel, queda conectado en UN paso (nube, llaves, Discord y red incluidas). Compartelo solo con gente de confianza.</div>';
+    h+='<button class="act-btn act-save" style="width:100%;" onclick="generarCodigoCompleto()">'+ico("tag")+' Generar codigo de invitacion</button>';
+    h+='<div class="field" style="margin-top:8px;"><input id="codigoCompleto" readonly placeholder="Pulsa el boton de arriba"></div>';
+    h+='<div class="msg" id="msgCodigoC"></div></div>';
+  } else {
+    h+='<div class="cfg-card"><div class="cfg-card-head">'+ico("tag")+'<span class="cfg-card-title">Vincularme a un grupo</span></div>';
+    h+='<div class="cfg-card-desc">Pega aqui el codigo que te dio el owner para configurar tu panel automaticamente.</div>';
+    h+='<div class="field"><input id="codigoPegar" placeholder="Pega el codigo aqui"></div>';
+    h+='<button class="act-btn act-purpur" onclick="vincularCodigo()">Vincularme</button><div class="msg" id="msgVincular"></div></div>';
+  }
+  // GRUPO DE PCs
+  h+='<div class="subt">'+ico("equipo")+' PCs del grupo'+(esOwner?' (puedes editar)':'')+'</div>';
+  var grupo=config.grupo||[];
+  if(grupo.length===0){ h+='<div class="banner">Aun no hay PCs registrados.</div>'; }
+  grupo.forEach(function(p,idx){
+    var ri=p.rol==="owner"?"crown":p.rol==="operador"?"tools":"players";
+    var esYo=(config.identidad && ((p.id && p.id===config.identidad.pc_id) || (p.pc && p.pc===config.identidad.este_pc)));
+    h+='<div class="item"><div class="item-info">'+ico(ri)+'<div><div>'+p.pc+' &middot; '+(p.usuario||"")+(esYo?' <span class="cp-badge" style="background:var(--verde);">tu</span>':'')+'</div><div class="item-sub">'+(p.id?p.id+' &middot; ':'')+'Rol: '+p.rol+'</div></div></div>';
+    if(esOwner && !esYo){ h+='<div class="item-btns">'+
+      '<select onchange="setRolPC('+idx+',this.value)" style="background:var(--card2);border:1px solid var(--linea);border-radius:7px;color:var(--texto);padding:5px;font-size:11px;">'+
+      ['operador','miembro'].map(function(o){return '<option value="'+o+'"'+(p.rol===o?' selected':'')+'>'+o+'</option>';}).join('')+
+      '</select><button class="mini-btn mb-ban" onclick="quitarPC('+idx+')">Quitar</button></div>'; }
+    else if(esOwner && esYo){ h+='<div class="item-btns"><span class="item-sub">Tu rol no se cambia</span></div>'; }
+    h+='</div>';
+  });
+  if(esOwner){
+    h+='<div class="cfg-card" style="margin-top:10px;"><div class="cfg-card-title" style="margin-bottom:10px;">Agregar PC</div>'+
+      '<div class="cfg-card-desc">Pidele a tu amigo su ID (lo ve en su panel, clic en su nombre arriba) y agregalo aqui.</div>'+
+      '<div class="field"><label>ID del amigo</label><input id="ng_id" placeholder="ej: ST-a3f9c2"></div>'+
+      '<div class="field"><label>Nombre del PC</label><input id="ng_pc" placeholder="ej: Mexico"></div>'+
+      '<div class="field"><label>Usuario</label><input id="ng_user" placeholder="ej: Carlos"></div>'+
+      sel("ng_rol","Rol","","operador",[["owner","Owner"],["operador","Operador"],["miembro","Miembro"]])+
+      '<button class="act-btn act-save" onclick="agregarPC()">'+ico("players")+' Agregar al grupo</button></div>'+
+      '<button class="act-btn act-purpur" onclick="publicarGrupo()">'+ico("download")+' Guardar y publicar grupo</button><div class="msg" id="msgGrupo"></div>';
+  }
+  h+='<div class="subt">Que puede hacer cada rol</div>';
+  h+='<div class="item"><div class="item-info">'+ico("crown")+'<div><div>Owner</div><div class="item-sub">Control total. Crea el grupo y asigna roles. Publica actualizaciones.</div></div></div></div>';
+  h+='<div class="item"><div class="item-info">'+ico("tools")+'<div><div>Operador</div><div class="item-sub">Control total del panel. Recibe actualizaciones automaticas.</div></div></div></div>';
+  h+='<div class="item"><div class="item-info">'+ico("players")+'<div><div>Miembro</div><div class="item-sub">Solo prender/apagar. Sin consola ni archivos. Mundo se borra al apagar (anti-trampa).</div></div></div></div>';
+  h+='<div class="subt">Sistema de turnos</div><div class="banner">Cualquiera puede hostear, pero solo uno a la vez. Si alguien intenta prender mientras otro lo tiene, el panel pregunta si tomar el control: el otro PC se apaga solo y sube el mundo a la nube primero. Nunca se pierde el progreso.</div>';
+  document.getElementById("equipoScroll").innerHTML=h;
+}
+function setRolPC(idx,rol){ if(config.grupo&&config.grupo[idx]) config.grupo[idx].rol=rol; }
+function quitarPC(idx){ if(config.grupo){ config.grupo.splice(idx,1); renderEquipo(); } }
+function agregarPC(){
+  var id=gv("ng_id").trim(), pc=gv("ng_pc").trim(), u=gv("ng_user").trim(), rol=gv("ng_rol");
+  if(!pc){ toast("Escribe el nombre del PC","error"); return; }
+  if(!config.grupo) config.grupo=[];
+  config.grupo.push({id:id,pc:pc,usuario:u,rol:rol});
+  renderEquipo(); toast("PC agregado al grupo","ok");
+}
+async function publicarGrupo(){
+  try{
+    var ok=await invoke("escribir_archivo",{path:ARCHIVO_CONFIG,contenido:JSON.stringify(config,null,2)});
+    if(ok) toast("Grupo guardado en la configuracion","ok"); else toast("Error al guardar","error");
+  }catch(e){ toast("Error: "+e,"error"); }
+}
+
+// ===== CODIGO DE VINCULACION =====
+function generarCodigo(){
+  try{
+    var datos={ nube:config.nube, discord:config.discord, red:config.red, instancias:config.instancias, grupo:config.grupo, servidor:{ jar_nombre:config.servidor.jar_nombre, puerto:config.servidor.puerto, rcon_puerto:config.servidor.rcon_puerto, rcon_password:config.servidor.rcon_password } };
+    return "ST1-"+btoa(unescape(encodeURIComponent(JSON.stringify(datos))));
+  }catch(e){ return "ERROR"; }
+}
+function copiarCodigo(){ var c=document.getElementById("codigoGrupo").value; try{ navigator.clipboard.writeText(c); }catch(e){} toast("Codigo copiado. Compartelo con tu amigo.","ok"); }
+async function generarCodigoCompleto(){
+  var msg=document.getElementById("msgCodigoC"); msg.style.color="var(--acento)"; msg.textContent="Leyendo llaves de la nube...";
+  try{
+    var remoto=(config.nube&&config.nube.rclone_remoto)||"";
+    if(!remoto){ msg.style.color="var(--rojo)"; msg.textContent="No hay nube configurada todavia."; return; }
+    var r=await invoke("ps_comando",{script:"& '"+RUTA_SCRIPTS+"\\_nube_export.ps1' -Remoto '"+remoto.replace(/'/g,"")+"'"});
+    var ll=JSON.parse(r);
+    if(!ll.ok){ msg.style.color="var(--rojo)"; msg.textContent="No se pudieron leer las llaves ("+(ll.error||"?")+")."; return; }
+    var datos={ nube:config.nube, discord:config.discord, red:config.red, instancias:config.instancias, grupo:config.grupo, servidor:{ jar_nombre:config.servidor.jar_nombre, puerto:config.servidor.puerto, rcon_puerto:config.servidor.rcon_puerto, rcon_password:config.servidor.rcon_password }, llaves:{ tipo:ll.tipo, cuenta:ll.cuenta, clave:ll.clave, region:ll.region, endpoint:ll.endpoint, proveedor_s3:ll.proveedor_s3 } };
+    var cod="ST2-"+btoa(unescape(encodeURIComponent(JSON.stringify(datos))));
+    document.getElementById("codigoCompleto").value=cod;
+    try{ navigator.clipboard.writeText(cod); }catch(e){}
+    msg.style.color="var(--verde)"; msg.textContent="Codigo completo generado y copiado. OJO: incluye tus llaves, compartelo solo con gente de confianza.";
+  }catch(e){ msg.style.color="var(--rojo)"; msg.textContent="Error: "+e; }
+}
+async function conectarConLlaves(llaves, nube){
+  try{
+    var datos={ tipo:llaves.tipo, proveedor_s3:llaves.proveedor_s3, remoto:nube.rclone_remoto, bucket:nube.bucket, cuenta:llaves.cuenta, clave:llaves.clave, region:llaves.region, endpoint:llaves.endpoint };
+    await invoke("escribir_archivo",{path:RUTA_ESTADO+"\\_nube_tmp.json",contenido:JSON.stringify(datos)});
+    var r=await invoke("ps_comando",{script:"& '"+RUTA_SCRIPTS+"\\_nube_conectar.ps1'"});
+    return r.indexOf("OK")===0;
+  }catch(e){ return false; }
+}
+async function vincularCodigo(){
+  var msg=document.getElementById("msgVincular");
+  var cod=(document.getElementById("codigoPegar").value||"").trim();
+  var completo=cod.indexOf("ST2-")===0;
+  if(cod.indexOf("ST1-")!==0 && !completo){ msg.style.color="var(--rojo)"; msg.textContent="Codigo invalido (debe empezar con ST1- o ST2-)"; return; }
+  try{
+    var datos=JSON.parse(decodeURIComponent(escape(atob(cod.substring(4)))));
+    if(datos.nube) config.nube=datos.nube;
+    if(datos.discord){ datos.discord.usar=config.discord?config.discord.usar:true; config.discord=datos.discord; }
+    if(datos.red) config.red=datos.red;
+    if(datos.instancias) config.instancias=datos.instancias;
+    if(datos.grupo) config.grupo=datos.grupo;
+    if(datos.servidor){ config.servidor.jar_nombre=datos.servidor.jar_nombre; config.servidor.puerto=datos.servidor.puerto; config.servidor.rcon_puerto=datos.servidor.rcon_puerto; config.servidor.rcon_password=datos.servidor.rcon_password; }
+    var ok=await invoke("escribir_archivo",{path:ARCHIVO_CONFIG,contenido:JSON.stringify(config,null,2)});
+    if(!ok){ msg.style.color="var(--rojo)"; msg.textContent="Error al guardar."; return; }
+    resolverIP();
+    if(completo && datos.llaves && config.nube){
+      msg.style.color="var(--acento)"; msg.textContent="Vinculado. Conectando la nube...";
+      var c=await conectarConLlaves(datos.llaves, config.nube);
+      if(c){ msg.style.color="var(--verde)"; msg.textContent="Vinculado y nube conectada! Ya puedes usar el servidor."; toast("Listo: grupo + nube","ok"); }
+      else { msg.style.color="var(--amarillo)"; msg.textContent="Vinculado, pero la nube no conecto. Revisa Ajustes > Nube."; }
+    } else {
+      msg.style.color="var(--verde)"; msg.textContent="Vinculado! Ahora ve a Ajustes > Nube y pega la llave de Backblaze que te paso el owner."; toast("Vinculado al grupo","ok");
+    }
+  }catch(e){ msg.style.color="var(--rojo)"; msg.textContent="Codigo corrupto: "+e; }
+}
+
+// ===== ACTUALIZACION GLOBAL (canal del developer) =====
+async function chequearUpdate(silent){
+  var m=document.getElementById("msgUpdate");
+  if(!config.actualizaciones){ return; }
+  if(!silent && m){ m.style.color="var(--acento)"; m.textContent="Buscando actualizacion..."; }
+  try{ var r=await invoke("ps_comando",{script:"& '"+RUTA_SCRIPTS+"\\_update_global.ps1'"}); procesarResultadoUpdate(r,silent); }
+  catch(e){ if(!silent && m){ m.style.color="var(--rojo)"; m.textContent="Error: "+e; } }
+}
+function procesarResultadoUpdate(r,silent){
+  var m=document.getElementById("msgUpdate"); r=(r||"").trim();
+  if(r.indexOf("ACTUALIZADO-EXE")===0){ var v=r.split(":")[1]||""; toast("Actualizado a v"+v+". Reiniciando el panel...","ok"); setTimeout(function(){ try{ invoke("salir_y_actualizar",{rutaBase:RUTA_BASE}); }catch(e){} },1600); }
+  else if(r.indexOf("ACTUALIZADO")===0){ var v2=r.split(":")[1]||""; toast("Actualizado a v"+v2,"ok"); if(m){ m.style.color="var(--verde)"; m.textContent="Actualizado a v"+v2+"."; } }
+  else if(r.indexOf("AL-DIA")===0){ if(!silent){ toast("Ya estas en la ultima version","ok"); if(m){ m.style.color="var(--verde)"; m.textContent="Estas al dia ("+(r.split(":")[1]||"")+")."; } } }
+  else if(r.indexOf("OFF")===0){ if(!silent && m){ m.textContent="Auto-actualizacion desactivada."; } }
+  else if(r.indexOf("SIN-REPO")===0){ if(!silent && m){ m.style.color="var(--amarillo)"; m.textContent="Falta el repositorio (solo developer)."; } }
+  else if(r.indexOf("SIN-CONEXION")===0){ if(!silent && m){ m.style.color="var(--rojo)"; m.textContent="Sin conexion a GitHub."; } }
+  else if(r.indexOf("SIN-ASSET")===0){ if(!silent && m){ m.style.color="var(--amarillo)"; m.textContent="La release no trae archivo .zip."; } }
+  else { if(!silent && m){ m.textContent=r; } }
+}
+function buscarUpdateAhora(){ chequearUpdate(false); }
+
+// ===== PRIMER USO / ONBOARDING =====
+function logoSVG(sz){ return '<svg viewBox="0 0 48 48" style="width:'+sz+'px;height:'+sz+'px;"><polygon points="42,24 33,39.6 15,39.6 6,24 15,8.4 33,8.4" fill="none" stroke="var(--acento)" stroke-width="3.5" stroke-linejoin="round"/><polygon points="33,24 28.5,31.8 19.5,31.8 15,24 19.5,16.2 28.5,16.2" fill="var(--verde)"/><circle cx="42" cy="24" r="3.5" fill="var(--acento)"/><circle cx="6" cy="24" r="3.5" fill="var(--acento)"/><circle cx="15" cy="39.6" r="3.5" fill="var(--acento)"/><circle cx="33" cy="39.6" r="3.5" fill="var(--acento)"/><circle cx="15" cy="8.4" r="3.5" fill="var(--acento)"/><circle cx="33" cy="8.4" r="3.5" fill="var(--amarillo)"/></svg>'; }
+function configBase(){ return {
+  _comentario:"Config generada por Skeledex. Se guarda en %APPDATA%\\Skeledex.",
+  local:false,
+  identidad:{pc_id:"ST-"+Math.random().toString(16).substring(2,8),nombre_usuario:"",este_pc:"",otro_pc:"",rol:"owner",version_sistema:"1.0.0"},
+  nube:{proveedor:"Backblaze B2",tipo_rclone:"b2",rclone_remoto:"minube",bucket:"",carpeta_mundo:"mundo-activo",carpeta_backups_nube:"backups-nube",archivo_lock:"turno.lock",archivo_estado_nube:"estado-nube.json",limite_gb:10},
+  servidor:{java_exe:"java",jar_nombre:"purpur.jar",java_args:"-Xms2G -Xmx4G -XX:+UseG1GC",carpeta_instancia:"Instancia",puerto:25565,rcon_puerto:25575,rcon_password:"Skeledex"+Math.floor(Math.random()*100000),tiempo_espera_inicio_seg:60,tiempo_espera_apagado_seg:120},
+  instancias:[{nombre:"Principal",carpeta:"Instancia"}],
+  grupo:[],
+  backups:{max_antes_de_iniciar:5,max_despues_de_apagar:5,max_diarios:30,max_papelera:20,comprimir:true},
+  sincronizacion:{timeout_subida_seg:300,timeout_descarga_seg:300,reintentos:3,verificar_hash:true},
+  discord:{usar:false,webhook_url:"",nombre_bot:"Skeledex",notificar_inicio:true,notificar_apagado:true,notificar_jugadores:true,status_periodico:false,status_intervalo_min:30,mensaje_inicio:"**{usuario}** ha iniciado el servidor.",mensaje_apagado:"**{usuario}** ha apagado el servidor. Mundo guardado en la nube.",mensaje_reinicio:"**{usuario}** esta reiniciando el servidor.",mensaje_join:"{jugador} entro al servidor",mensaje_leave:"{jugador} salio del servidor"},
+  red:{metodo:"playit",direccion_publica:"",playit_direccion:"",duckdns_dominio:"",duckdns_token:"",ip_manual:""},
+  avanzado:{autosave_habilitado:true,autosave_intervalo_min:15,auto_reinicio_crash:true,max_reinicios_crash:3,watchdog_intervalo_seg:15,watchdog_nube_cada_ciclos:4,borrar_mundo_miembros:true,ocultar_carpeta_miembros:true},
+  actualizaciones:{auto:true,canal:"github",repo:"MasterXDXDX/Skeledex",ultimo_chequeo:""}
+}; }
+function overlay(inner){ var d=document.createElement("div"); d.id="ov_capa"; d.style.cssText="position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:9999;display:flex;align-items:center;justify-content:center;padding:20px;overflow:auto;"; d.innerHTML='<div style="background:var(--panel,#1a1f29);border:1px solid var(--borde,#2a2f3a);border-radius:14px;padding:22px;max-width:520px;width:100%;box-shadow:0 18px 60px rgba(0,0,0,.5);">'+inner+'</div>'; document.body.appendChild(d); return d; }
+function cerrarOverlay(){ var c=document.getElementById("ov_capa"); if(c) c.remove(); }
+function mostrarCarga(txt){ cerrarCarga(); var d=document.createElement("div"); d.id="cargaCapa"; d.style.cssText="position:fixed;inset:0;background:rgba(0,0,0,.62);z-index:10000;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;"; d.innerHTML='<svg viewBox="0 0 24 24" class="spin" style="width:44px;height:44px;stroke:var(--acento);fill:none;stroke-width:2.6;stroke-linecap:round;"><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg><div style="color:#fff;font-size:15px;font-weight:600;">'+(txt||"Cargando...")+'</div>'; document.body.appendChild(d); }
+function cerrarCarga(){ var c=document.getElementById("cargaCapa"); if(c) c.remove(); }
+function confirmarAccion(titulo,texto,cb){
+  var h='<div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;">'+ico("alert")+'<h2 style="margin:0;font-size:17px;">'+titulo+'</h2></div>';
+  h+='<div style="opacity:.8;font-size:13px;margin-bottom:14px;">'+texto+'</div>';
+  h+='<div style="display:flex;gap:8px;"><button class="act-btn" style="flex:1;background:var(--card2);color:var(--texto);" onclick="cerrarOverlay()">Cancelar</button><button class="act-btn act-save" style="flex:1;" id="ov_ok">Confirmar</button></div>';
+  overlay(h);
+  document.getElementById("ov_ok").onclick=function(){ cerrarOverlay(); try{ cb(); }catch(e){} };
+}
+function mostrarTour(){
+  if(localStorage.getItem("tourVisto")==="1") return;
+  var pasos=[
+    ["play","Prende tu servidor","Pulsa Iniciar arriba. La primera vez prepara todo; cuando salga ONLINE, ya pueden entrar."],
+    ["check","Mira lo que te falta","En el panel principal tienes una lista: Java, servidor, nube/local y red. Los botones te llevan a arreglar cada cosa."],
+    ["globe","Comparte con amigos","Usa el boton Compartir para enviarles la direccion lista para entrar."],
+    ["ajustes","Todo es configurable","En Ajustes cambias RAM, motor, Discord, nube, idioma y mas. Los cambios se guardan con el boton flotante."]
+  ];
+  var h='<div style="text-align:center;margin-bottom:12px;">'+logoSVG(48)+'<h2 style="margin:8px 0 0;font-size:18px;">Bienvenido a Skeledex</h2></div>';
+  pasos.forEach(function(p){ h+='<div class="item" style="padding:9px;"><div class="item-info">'+ico(p[0])+'<div><div>'+p[1]+'</div><div class="item-sub">'+p[2]+'</div></div></div></div>'; });
+  h+='<button class="act-btn act-save" style="width:100%;margin-top:12px;" onclick="localStorage.setItem(\'tourVisto\',\'1\');cerrarOverlay();">Empezar</button>';
+  overlay(h);
+}
+function mostrarPrimerUso(){
+  var t=localStorage.getItem("tema")||"azul"; try{setTema(t);}catch(e){}
+  var h='<div style="text-align:center;margin-bottom:16px;">'+logoSVG(56)+'<h1 style="margin:8px 0 2px;font-size:22px;">Bienvenido a Skeledex</h1><div style="opacity:.7;font-size:13px;">Servidor de Minecraft compartido entre PCs</div></div>';
+  h+='<div id="ob_opciones">';
+  h+='<button class="act-btn act-save" style="width:100%;margin-bottom:10px;" onclick="obCrear()">'+ico("crown")+' Crear un servidor nuevo</button>';
+  h+='<button class="act-btn" style="width:100%;background:var(--acento);color:#fff;" onclick="obUnir()">'+ico("equipo")+' Unirme a un grupo (tengo un codigo)</button>';
+  h+='<div style="opacity:.6;font-size:12px;margin-top:14px;text-align:center;">Crear: eres el owner y configuras la nube. Unirse: pega el codigo que te dio el owner y listo.</div>';
+  h+='</div><div id="ob_form"></div>';
+  var d=overlay(h); d.id="ov_capa"; d.style.background="var(--fondo,#0e1116)";
+}
+function obVolver(){ document.getElementById("ob_form").innerHTML=""; document.getElementById("ob_opciones").style.display="block"; }
+function obCrear(){ document.getElementById("ob_opciones").style.display="none";
+  document.getElementById("ob_form").innerHTML='<div class="subt" style="margin-top:6px;">Crear servidor nuevo</div>'+inp("ob_nombre","Tu nombre","Aparece en Discord cuando prendes el server.","")+inp("ob_pc","Nombre de este PC","Ej: Colombia, Casa...","")+inp("ob_otro","Nombre del otro PC (opcional)","","")+tog("ob_local","Solo en este PC (sin nube)","Activalo si solo quieres jugar tu (o con amigos por red) sin Backblaze ni turnos. Mas facil para empezar.",false)+tog("ob_prep","Preparar el servidor ahora","Descarga Purpur, acepta el EULA y configura RCON automaticamente.",true)+'<button class="act-btn act-save" style="width:100%;margin-top:8px;" onclick="obCrearGuardar()">Crear y empezar</button><button class="mini-btn" style="width:100%;margin-top:6px;" onclick="obVolver()">Volver</button><div class="msg" id="ob_msg"></div>'; }
+async function obCrearGuardar(){ var msg=document.getElementById("ob_msg");
+  if(!gv("ob_nombre").trim()||!gv("ob_pc").trim()){ msg.style.color="var(--rojo)"; msg.textContent="Pon tu nombre y el de este PC."; return; }
+  var c=configBase(); c.identidad.nombre_usuario=gv("ob_nombre").trim(); c.identidad.este_pc=gv("ob_pc").trim(); c.identidad.otro_pc=gv("ob_otro").trim(); c.identidad.rol="owner"; c.local=gvb("ob_local");
+  c.grupo=[{pc:c.identidad.este_pc,usuario:c.identidad.nombre_usuario,rol:"owner"}];
+  var ok=await invoke("escribir_archivo",{path:ARCHIVO_CONFIG,contenido:JSON.stringify(c,null,2)});
+  if(ok){
+    if(gvb("ob_prep")){ config=c; var msg=document.getElementById("ob_msg"); if(msg){msg.style.color="var(--acento)";msg.textContent="Preparando el servidor (descargando Purpur)... puede tardar 1-2 min.";} try{ await invoke("ps_comando",{script:"& '"+RUTA_SCRIPTS+"\\_primer_servidor.ps1'"}); }catch(e){} }
+    toast("Servidor creado. Configura la nube en Ajustes.","ok"); setTimeout(function(){location.reload();},700);
+  } else { msg.style.color="var(--rojo)"; msg.textContent="Error al guardar."; } }
+function obUnir(){ document.getElementById("ob_opciones").style.display="none";
+  document.getElementById("ob_form").innerHTML='<div class="subt" style="margin-top:6px;">Unirme a un grupo</div>'+inp("ob_nombre","Tu nombre","","")+inp("ob_pc","Nombre de este PC","Ej: Espana...","")+'<div class="field"><label>Codigo de vinculacion</label><input id="ob_cod" placeholder="ST1-..."></div>'+sel("ob_rol","Tu rol","operador: control total. miembro: solo prender/apagar.","operador",[["operador","Operador"],["miembro","Miembro"]])+'<button class="act-btn act-save" style="width:100%;margin-top:8px;" onclick="obUnirGuardar()">Unirme</button><button class="mini-btn" style="width:100%;margin-top:6px;" onclick="obVolver()">Volver</button><div class="msg" id="ob_msg"></div>'; }
+async function obUnirGuardar(){ var msg=document.getElementById("ob_msg"); var cod=(gv("ob_cod")||"").trim();
+  var completo=cod.indexOf("ST2-")===0;
+  if(!gv("ob_nombre").trim()||!gv("ob_pc").trim()){ msg.style.color="var(--rojo)"; msg.textContent="Pon tu nombre y el de este PC."; return; }
+  if(cod.indexOf("ST1-")!==0 && !completo){ msg.style.color="var(--rojo)"; msg.textContent="Codigo invalido (empieza con ST1- o ST2-)."; return; }
+  try{ var datos=JSON.parse(decodeURIComponent(escape(atob(cod.substring(4))))); var c=configBase();
+    if(datos.nube)c.nube=datos.nube; if(datos.discord)c.discord=datos.discord; if(datos.red)c.red=datos.red; if(datos.instancias)c.instancias=datos.instancias; if(datos.grupo)c.grupo=datos.grupo;
+    if(datos.servidor){ c.servidor.jar_nombre=datos.servidor.jar_nombre||c.servidor.jar_nombre; c.servidor.puerto=datos.servidor.puerto||c.servidor.puerto; c.servidor.rcon_puerto=datos.servidor.rcon_puerto||c.servidor.rcon_puerto; c.servidor.rcon_password=datos.servidor.rcon_password||c.servidor.rcon_password; }
+    c.identidad.nombre_usuario=gv("ob_nombre").trim(); c.identidad.este_pc=gv("ob_pc").trim(); c.identidad.rol=gv("ob_rol");
+    if(!c.grupo)c.grupo=[]; c.grupo.push({pc:c.identidad.este_pc,usuario:c.identidad.nombre_usuario,rol:c.identidad.rol});
+    var ok=await invoke("escribir_archivo",{path:ARCHIVO_CONFIG,contenido:JSON.stringify(c,null,2)});
+    if(!ok){ msg.style.color="var(--rojo)"; msg.textContent="Error al guardar."; return; }
+    if(completo && datos.llaves && c.nube){ msg.style.color="var(--acento)"; msg.textContent="Unido. Conectando la nube..."; config=c; await conectarConLlaves(datos.llaves, c.nube); }
+    toast("Unido al grupo","ok"); setTimeout(function(){location.reload();},700);
+  }catch(e){ msg.style.color="var(--rojo)"; msg.textContent="Codigo corrupto: "+e; } }
+
+// ===== GESTOR DE INSTANCIAS / GRUPO =====
+function abrirGestorInstancias(){
+  if(config.identidad && config.identidad.rol==="miembro"){ toast("Solo owner/operador puede cambiar instancia","info"); return; }
+  var insts=config.instancias||[{nombre:"Principal",carpeta:"Instancia"}];
+  var actual=config.servidor?config.servidor.carpeta_instancia:"Instancia";
+  var h='<div style="display:flex;align-items:center;gap:8px;margin-bottom:12px;">'+ico("mundo")+'<h2 style="margin:0;font-size:18px;">Instancias y grupo</h2></div>';
+  h+='<div style="opacity:.7;font-size:12px;margin-bottom:10px;">Una instancia es un mundo/servidor independiente. Cambia entre ellas o crea una nueva.</div>';
+  insts.forEach(function(it){ var act=(it.carpeta===actual); h+='<div class="item" style="cursor:pointer;'+(act?'border:1px solid var(--acento);':'')+'" onclick="cambiarInstancia(\''+it.carpeta+'\',\''+it.nombre.replace(/'/g,"")+'\')"><div class="item-info">'+ico("mundo")+'<div><div>'+it.nombre+(act?' &middot; <span style="color:var(--verde);">activa</span>':'')+'</div><div class="item-sub">'+it.carpeta+(it.motor?(' &middot; '+it.motor):'')+'</div></div></div></div>'; });
+  h+='<div id="gi_form" style="margin-top:10px;"></div>';
+  h+='<div style="display:flex;gap:8px;margin-top:12px;flex-wrap:wrap;">';
+  h+='<button class="act-btn act-save" style="flex:1;" onclick="giCrear()">'+ico("backups")+' Crear instancia</button>';
+  h+='<button class="act-btn" style="flex:1;background:var(--acento);color:#fff;" onclick="cerrarOverlay();irVista(\'equipo\');">'+ico("equipo")+' Unirse a un grupo</button>';
+  h+='</div><button class="mini-btn" style="width:100%;margin-top:8px;" onclick="cerrarOverlay()">Cerrar</button>';
+  overlay(h);
+}
+function giCrear(){
+  var h='<div class="subt">Nueva instancia</div>'+inp("gi_nombre","Nombre","Ej: Survival, Creativo...","")+inp("gi_carpeta","Carpeta","Sin espacios. Ej: Survival","");
+  h+='<div class="field"><label>Motor</label><select id="gi_motor" onchange="giCargarVersiones()">';
+  MOTORES.forEach(function(m){ h+='<option value="'+m[0]+'">'+m[1]+'</option>'; });
+  h+='</select></div>';
+  h+='<div class="field"><label>Version</label><select id="gi_ver"><option>Cargando...</option></select></div>';
+  h+='<div class="banner" id="gi_nota" style="display:none;"></div>';
+  h+='<button class="act-btn act-save" style="width:100%;margin-top:6px;" onclick="giGuardar()">Crear instancia</button><div class="msg" id="gi_msg"></div>';
+  document.getElementById("gi_form").innerHTML=h;
+  giCargarVersiones();
+}
+async function giCargarVersiones(){
+  var motor=gv("gi_motor"); var sel=document.getElementById("gi_ver"); var nota=document.getElementById("gi_nota"); if(!sel) return;
+  sel.innerHTML='<option>Cargando...</option>';
+  try{
+    var d=JSON.parse(await invoke("ps_comando",{script:"& '"+RUTA_SCRIPTS+"\\_motores.ps1' -Accion versiones -Motor '"+motor+"'"}));
+    if(!d.ok||!d.versiones||!d.versiones.length){ sel.innerHTML='<option>(sin versiones)</option>'; if(nota){nota.style.display="none";} return; }
+    sel.innerHTML=""; d.versiones.forEach(function(v){ sel.innerHTML+='<option>'+v+'</option>'; });
+    if(nota){ if(d.auto){ nota.style.display="none"; } else { nota.style.display="block"; nota.textContent="Este motor no se instala solo. Crea la instancia y luego sube su .jar en Mundo."; } }
+  }catch(e){ sel.innerHTML='<option>(error)</option>'; }
+}
+async function giGuardar(){ var msg=document.getElementById("gi_msg"); var n=gv("gi_nombre").trim(), cp=(gv("gi_carpeta").trim()||n).replace(/[^A-Za-z0-9_-]/g,"");
+  if(!n||!cp){ msg.style.color="var(--rojo)"; msg.textContent="Falta nombre/carpeta."; return; }
+  if(!config.instancias)config.instancias=[]; if(config.instancias.some(function(x){return x.carpeta===cp;})){ msg.style.color="var(--rojo)"; msg.textContent="Ya existe esa carpeta."; return; }
+  var motor=gv("gi_motor")||"purpur"; var version=gv("gi_ver"); var jar="";
+  msg.style.color="var(--acento)"; msg.textContent="Creando instancia"+(version&&version.indexOf("(")!==0?(" e instalando "+motor+" "+version+" (puede tardar)..."):"...");
+  try{ await invoke("ps_comando",{script:"New-Item -ItemType Directory -Force -Path '"+RUTA_BASE+"\\"+cp+"' | Out-Null"}); }catch(e){}
+  if(version && version.indexOf("(")!==0){
+    try{ var d=JSON.parse(await invoke("ps_comando",{script:"& '"+RUTA_SCRIPTS+"\\_motores.ps1' -Accion instalar -Motor '"+motor+"' -Version '"+version+"' -CarpetaInstancia '"+cp+"'"})); if(d.ok){ jar=d.jar; } }catch(e){}
+  }
+  config.instancias.push({nombre:n,carpeta:cp,motor:motor,jar:(jar||"purpur.jar")});
+  var ok=await invoke("escribir_archivo",{path:ARCHIVO_CONFIG,contenido:JSON.stringify(config,null,2)});
+  if(ok){ toast("Instancia '"+n+"' creada","ok"); abrirGestorInstancias(); } else { msg.style.color="var(--rojo)"; msg.textContent="Error al guardar."; } }
+async function cambiarInstancia(carpeta,nombre){
+  if(prevOnline){ toast("Apaga el servidor antes de cambiar de instancia","info"); return; }
+  cerrarOverlay();
+  mostrarCarga("Cambiando a "+nombre+"...");
+  try{
+    if(!config.servidor)config.servidor={}; config.servidor.carpeta_instancia=carpeta;
+    var ent=(config.instancias||[]).filter(function(x){return x.carpeta===carpeta;})[0];
+    if(ent){ config.servidor.jar_nombre=ent.jar||config.servidor.jar_nombre; if(ent.motor) config.servidor.motor=ent.motor; }
+    var ok=await invoke("escribir_archivo",{path:ARCHIVO_CONFIG,contenido:JSON.stringify(config,null,2)});
+    if(!ok){ cerrarCarga(); toast("Error al cambiar","error"); return; }
+    await cargarConfig();
+    actualizarInstSel();
+    try{ saludExtraCache=null; await cargarSaludExtra(); }catch(e){}
+    await actualizar();
+    irVista("dashboard");
+  }catch(e){}
+  cerrarCarga();
+  toast("Ahora estas en: "+nombre,"ok");
+}
+
+// ===== ATAJOS DE TECLADO =====
+function ayudaAtajos(){
+  var h='<div style="display:flex;align-items:center;gap:8px;margin-bottom:12px;">'+ico("info")+'<h2 style="margin:0;font-size:17px;">Atajos de teclado</h2></div>';
+  var at=[["Ctrl + I","Iniciar servidor"],["Ctrl + P","Apagar servidor"],["Ctrl + R","Reiniciar servidor"],["?","Mostrar esta ayuda"]];
+  at.forEach(function(a){ h+='<div class="item"><div class="item-info">'+a[1]+'</div><div class="item-sub"><kbd style="background:var(--card2);padding:2px 7px;border-radius:5px;">'+a[0]+'</kbd></div></div>'; });
+  h+='<button class="act-btn act-save" style="width:100%;margin-top:12px;" onclick="cerrarOverlay()">Cerrar</button>';
+  overlay(h);
+}
+document.addEventListener("keydown",function(e){
+  if(e.key==="?" && !/input|textarea/i.test((e.target&&e.target.tagName)||"")){ e.preventDefault(); if(!document.getElementById("ov_capa")) ayudaAtajos(); }
+});
+document.addEventListener("keydown",function(e){
+  if(!e.ctrlKey) return;
+  var k=e.key.toLowerCase();
+  if(k==="i"){ e.preventDefault(); if(!document.getElementById("btnStart").disabled) accion("iniciar"); }
+  else if(k==="p"){ e.preventDefault(); if(!document.getElementById("btnStop").disabled) accion("apagar"); }
+  else if(k==="r"){ e.preventDefault(); if(!document.getElementById("btnRestart").disabled) accion("reiniciar"); }
+  else if(k==="s"){ e.preventDefault(); var act=document.querySelector(".nav-btn.active"); var v=act?act.getAttribute("data-view"):""; if(v==="ajustes"){ guardarAjustes(); } else if(v==="config"){ guardarProps(); } }
+});
+
+esperarTauri();
+</script>
+</body>
+</html>
