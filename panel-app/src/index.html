@@ -871,8 +871,10 @@ async function instalarPlayit(){
 }
 function configurarPlayit(){
   toast("Abriendo Playit para vincular tu tunel...","info");
-  var ps="$p=Join-Path '"+RUTA_BASE+"' 'playit.exe'; if(-not (Test-Path $p)){ $p='C:\\Program Files\\playit_gg\\bin\\playit.exe' }; if(Test-Path $p){ Start-Process cmd.exe -ArgumentList '/k',('\"'+$p+'\"') } else { Start-Process 'https://playit.gg/' }";
-  try{ invoke("ps_comando",{script:ps}); toast("Sigue los pasos en la ventana de Playit: te da un enlace para vincular y tu direccion (pegala arriba).","info"); }catch(e){ toast("Error: "+e,"error"); }
+  invoke("ps_comando",{script:"& '"+RUTA_SCRIPTS+"\\_playit_run.ps1'"}).then(function(r){
+    if((r||"").indexOf("NO-INSTALADO")>=0){ toast("Playit no esta instalado. Pulsa 'Instalar Playit' primero.","error"); }
+    else { toast("Sigue los pasos en la ventana de Playit: te da un enlace para vincular y tu direccion (pegala arriba).","info"); }
+  }).catch(function(e){ toast("Error: "+e,"error"); });
 }
 function compartir(){
   var dir=ipActual||""; if(!dir){ toast("Configura la red en Ajustes para tener una direccion","info"); irVista("ajustes"); return; }
@@ -912,6 +914,16 @@ function iniciarProgreso(){
       if(lc){ var lines=lc.split("\n").filter(function(l){return l.trim();});
         var ult=lines[lines.length-1]||"";
         var m=ult.match(/\]\s*(.+)$/); if(m){ document.getElementById("statusSub").textContent=m[1].substring(0,40); }
+        // Detectar fallo de arranque para no quedarse colgado en INICIANDO
+        if(accionTipo==="iniciar"){
+          var recientes=lines.slice(-7).join(" ");
+          if(/Abortando|fallaron|No se puede iniciar|no esta instalado|Error al crear backup|Error al tomar turno|Error al descargar/i.test(recientes)){
+            accionEnCurso=false; if(accionBtn){ var be=document.getElementById(accionBtn); if(be) be.innerHTML=accionBtnOrig; }
+            clearInterval(progInterval); progInterval=null;
+            toast("No se pudo iniciar. Revisa Consola > Diagnostico (suele faltar Java o conectar la nube).","error");
+            actualizar();
+          }
+        }
       }
     }catch(e){}
   },1500);
@@ -1539,18 +1551,24 @@ function generarCodigo(){
 }
 function copiarCodigo(){ var c=document.getElementById("codigoGrupo").value; try{ navigator.clipboard.writeText(c); }catch(e){} toast("Codigo copiado. Compartelo con tu amigo.","ok"); }
 async function generarCodigoCompleto(){
-  var msg=document.getElementById("msgCodigoC"); msg.style.color="var(--acento)"; msg.textContent="Leyendo llaves de la nube...";
+  var msg=document.getElementById("msgCodigoC"); msg.style.color="var(--acento)"; msg.textContent="Generando codigo...";
   try{
-    var remoto=(config.nube&&config.nube.rclone_remoto)||"";
-    if(!remoto){ msg.style.color="var(--rojo)"; msg.textContent="No hay nube configurada todavia."; return; }
-    var r=await invoke("ps_comando",{script:"& '"+RUTA_SCRIPTS+"\\_nube_export.ps1' -Remoto '"+remoto.replace(/'/g,"")+"'"});
-    var ll=JSON.parse(r);
-    if(!ll.ok){ msg.style.color="var(--rojo)"; msg.textContent="No se pudieron leer las llaves ("+(ll.error||"?")+")."; return; }
-    var datos={ nube:config.nube, discord:config.discord, red:config.red, instancias:config.instancias, grupo:config.grupo, servidor:{ jar_nombre:config.servidor.jar_nombre, puerto:config.servidor.puerto, rcon_puerto:config.servidor.rcon_puerto, rcon_password:config.servidor.rcon_password }, llaves:{ tipo:ll.tipo, cuenta:ll.cuenta, clave:ll.clave, region:ll.region, endpoint:ll.endpoint, proveedor_s3:ll.proveedor_s3 } };
-    var cod="ST2-"+btoa(unescape(encodeURIComponent(JSON.stringify(datos))));
+    var base={ nube:config.nube, discord:config.discord, red:config.red, instancias:config.instancias, grupo:config.grupo, servidor:{ jar_nombre:config.servidor.jar_nombre, puerto:config.servidor.puerto, rcon_puerto:config.servidor.rcon_puerto, rcon_password:config.servidor.rcon_password } };
+    var llaves=null;
+    if(!config.local){
+      var remoto=(config.nube&&config.nube.rclone_remoto)||"";
+      if(remoto){
+        try{ var ll=JSON.parse(await invoke("ps_comando",{script:"& '"+RUTA_SCRIPTS+"\\_nube_export.ps1' -Remoto '"+remoto.replace(/'/g,"")+"'"}));
+          if(ll.ok){ llaves={ tipo:ll.tipo, cuenta:ll.cuenta, clave:ll.clave, region:ll.region, endpoint:ll.endpoint, proveedor_s3:ll.proveedor_s3 }; } }catch(e){}
+      }
+    }
+    if(llaves) base.llaves=llaves;
+    var cod=(llaves?"ST2-":"ST1-")+btoa(unescape(encodeURIComponent(JSON.stringify(base))));
     document.getElementById("codigoCompleto").value=cod;
     try{ navigator.clipboard.writeText(cod); }catch(e){}
-    msg.style.color="var(--verde)"; msg.textContent="Codigo completo generado y copiado. OJO: incluye tus llaves, compartelo solo con gente de confianza.";
+    if(config.local){ msg.style.color="var(--amarillo)"; msg.textContent="Codigo generado (modo local: sin nube, sirve solo para la config). Copiado."; }
+    else if(llaves){ msg.style.color="var(--verde)"; msg.textContent="Codigo completo generado y copiado. Incluye las llaves: compartelo solo con gente de confianza."; }
+    else { msg.style.color="var(--amarillo)"; msg.textContent="Codigo generado SIN llaves (no encontre la nube conectada). Tu amigo tendra que pegar la llave aparte, o conecta la nube primero."; }
   }catch(e){ msg.style.color="var(--rojo)"; msg.textContent="Error: "+e; }
 }
 async function conectarConLlaves(llaves, nube){
@@ -1614,7 +1632,7 @@ function logoSVG(sz){ return '<svg viewBox="0 0 48 48" style="width:'+sz+'px;hei
 function configBase(){ return {
   _comentario:"Config generada por Skeledex. Se guarda en %APPDATA%\\Skeledex.",
   local:false,
-  identidad:{pc_id:"ST-"+Math.random().toString(16).substring(2,8),nombre_usuario:"",este_pc:"",otro_pc:"",rol:"owner",version_sistema:"1.0.3"},
+  identidad:{pc_id:"ST-"+Math.random().toString(16).substring(2,8),nombre_usuario:"",este_pc:"",otro_pc:"",rol:"owner",version_sistema:"1.0.4"},
   nube:{proveedor:"Backblaze B2",tipo_rclone:"b2",rclone_remoto:"minube",bucket:"",carpeta_mundo:"mundo-activo",carpeta_backups_nube:"backups-nube",archivo_lock:"turno.lock",archivo_estado_nube:"estado-nube.json",limite_gb:10},
   servidor:{java_exe:"java",jar_nombre:"purpur.jar",java_args:"-Xms2G -Xmx4G -XX:+UseG1GC",carpeta_instancia:"Instancia",puerto:25565,rcon_puerto:25575,rcon_password:"Skeledex"+Math.floor(Math.random()*100000),tiempo_espera_inicio_seg:60,tiempo_espera_apagado_seg:120},
   instancias:[{nombre:"Principal",carpeta:"Instancia"}],
@@ -1696,13 +1714,49 @@ function abrirGestorInstancias(){
   var actual=config.servidor?config.servidor.carpeta_instancia:"Instancia";
   var h='<div style="display:flex;align-items:center;gap:8px;margin-bottom:12px;">'+ico("mundo")+'<h2 style="margin:0;font-size:18px;">Instancias y grupo</h2></div>';
   h+='<div style="opacity:.7;font-size:12px;margin-bottom:10px;">Una instancia es un mundo/servidor independiente. Cambia entre ellas o crea una nueva.</div>';
-  insts.forEach(function(it){ var act=(it.carpeta===actual); h+='<div class="item" style="cursor:pointer;'+(act?'border:1px solid var(--acento);':'')+'" onclick="cambiarInstancia(\''+it.carpeta+'\',\''+it.nombre.replace(/'/g,"")+'\')"><div class="item-info">'+ico("mundo")+'<div><div>'+it.nombre+(act?' &middot; <span style="color:var(--verde);">activa</span>':'')+'</div><div class="item-sub">'+it.carpeta+(it.motor?(' &middot; '+it.motor):'')+'</div></div></div></div>'; });
+  insts.forEach(function(it,idx){ var act=(it.carpeta===actual); var nm=(it.nombre||"").replace(/'/g,"");
+    h+='<div class="item"><div class="item-info" style="cursor:pointer;flex:1;" onclick="cambiarInstancia(\''+it.carpeta+'\',\''+nm+'\')">'+ico("mundo")+'<div><div>'+it.nombre+(act?' &middot; <span style="color:var(--verde);">activa</span>':'')+'</div><div class="item-sub">'+it.carpeta+(it.motor?(' &middot; '+it.motor):'')+'</div></div></div><div class="item-btns"><button class="mini-btn" style="background:var(--card2);color:var(--texto);" onclick="editarInstancia('+idx+')">Editar</button>'+((act||insts.length<=1)?'':'<button class="mini-btn mb-ban" onclick="borrarInstancia('+idx+')">Borrar</button>')+'</div></div>';
+  });
   h+='<div id="gi_form" style="margin-top:10px;"></div>';
   h+='<div style="display:flex;gap:8px;margin-top:12px;flex-wrap:wrap;">';
   h+='<button class="act-btn act-save" style="flex:1;" onclick="giCrear()">'+ico("backups")+' Crear instancia</button>';
-  h+='<button class="act-btn" style="flex:1;background:var(--acento);color:#fff;" onclick="cerrarOverlay();irVista(\'equipo\');">'+ico("equipo")+' Unirse a un grupo</button>';
-  h+='</div><button class="mini-btn" style="width:100%;margin-top:8px;" onclick="cerrarOverlay()">Cerrar</button>';
+  h+='<button class="act-btn" style="flex:1;background:var(--acento);color:#fff;" onclick="giUnir()">'+ico("equipo")+' Unirse a un grupo</button>';
+  h+='</div><button class="mini-btn" style="width:100%;margin-top:8px;background:var(--card2);color:var(--texto);" onclick="cerrarOverlay()">Cerrar</button>';
   overlay(h);
+}
+function editarInstancia(idx){
+  var it=(config.instancias||[])[idx]; if(!it) return;
+  document.getElementById("gi_form").innerHTML='<div class="subt">Editar instancia</div>'+inp("gi_rename","Nuevo nombre","",it.nombre)+'<button class="act-btn act-save" style="width:100%;margin-top:6px;" onclick="guardarRename('+idx+')">Guardar nombre</button>';
+}
+async function guardarRename(idx){
+  var it=(config.instancias||[])[idx]; if(!it) return; var n=gv("gi_rename").trim(); if(!n) return;
+  it.nombre=n; await invoke("escribir_archivo",{path:ARCHIVO_CONFIG,contenido:JSON.stringify(config,null,2)});
+  actualizarInstSel(); toast("Instancia renombrada","ok"); abrirGestorInstancias();
+}
+function borrarInstancia(idx){
+  var it=(config.instancias||[])[idx]; if(!it) return;
+  confirmarAccion("Borrar instancia","Se quitara '"+it.nombre+"' de la lista. Los archivos quedan en la carpeta "+it.carpeta+" por si acaso. Continuar?",async function(){
+    config.instancias.splice(idx,1);
+    await invoke("escribir_archivo",{path:ARCHIVO_CONFIG,contenido:JSON.stringify(config,null,2)});
+    toast("Instancia borrada de la lista","ok"); abrirGestorInstancias();
+  });
+}
+function giUnir(){
+  document.getElementById("gi_form").innerHTML='<div class="subt">Unirme a un grupo</div><div class="hint">Pega el codigo que te dio el owner. Tu panel se configurara con la nube y red del grupo.</div>'+inp("gi_cod","Codigo de invitacion","","ST...")+sel("gi_rol","Tu rol","operador: control total. miembro: solo prender/apagar.","operador",[["operador","Operador"],["miembro","Miembro"]])+'<button class="act-btn act-save" style="width:100%;margin-top:6px;" onclick="giUnirGuardar()">Unirme al grupo</button><div class="msg" id="gi_umsg"></div>';
+}
+async function giUnirGuardar(){
+  var msg=document.getElementById("gi_umsg"); var cod=(gv("gi_cod")||"").trim();
+  if(cod.indexOf("ST1-")!==0 && cod.indexOf("ST2-")!==0){ msg.style.color="var(--rojo)"; msg.textContent="Codigo invalido (empieza con ST1- o ST2-)."; return; }
+  mostrarCarga("Uniendote al grupo...");
+  try{
+    var datos=JSON.parse(decodeURIComponent(escape(atob(cod.substring(4)))));
+    if(datos.nube)config.nube=datos.nube; if(datos.discord)config.discord=datos.discord; if(datos.red)config.red=datos.red; if(datos.instancias)config.instancias=datos.instancias; if(datos.grupo)config.grupo=datos.grupo;
+    if(datos.servidor){ config.servidor.jar_nombre=datos.servidor.jar_nombre||config.servidor.jar_nombre; config.servidor.puerto=datos.servidor.puerto||config.servidor.puerto; config.servidor.rcon_puerto=datos.servidor.rcon_puerto||config.servidor.rcon_puerto; config.servidor.rcon_password=datos.servidor.rcon_password||config.servidor.rcon_password; }
+    config.local=false; config.identidad.rol=gv("gi_rol");
+    await invoke("escribir_archivo",{path:ARCHIVO_CONFIG,contenido:JSON.stringify(config,null,2)});
+    if(cod.indexOf("ST2-")===0 && datos.llaves && config.nube){ await conectarConLlaves(datos.llaves, config.nube); }
+    cerrarCarga(); toast("Te uniste al grupo. Reiniciando panel...","ok"); setTimeout(function(){ location.reload(); },800);
+  }catch(e){ cerrarCarga(); msg.style.color="var(--rojo)"; msg.textContent="Codigo corrupto: "+e; }
 }
 function giCrear(){
   var h='<div class="subt">Nueva instancia</div>'+inp("gi_nombre","Nombre","Ej: Survival, Creativo...","")+inp("gi_carpeta","Carpeta","Sin espacios. Ej: Survival","");

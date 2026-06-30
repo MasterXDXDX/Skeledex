@@ -356,8 +356,35 @@ fn salir_y_actualizar(app: tauri::AppHandle, ruta_base: String) {
     app.exit(0);
 }
 
+// Evita abrir varias instancias: si ya hay un Skeledex corriendo, no abre otro.
+fn ya_corriendo() -> bool {
+    let base = ruta_base_interna();
+    let lock = format!("{}\\Estado\\app.lock", base);
+    let mio = std::process::id();
+    if let Ok(s) = fs::read_to_string(&lock) {
+        if let Ok(pid) = s.trim().parse::<u32>() {
+            if pid != mio {
+                use sysinfo::{Pid, ProcessesToUpdate, System};
+                let mut sys = System::new();
+                sys.refresh_processes(ProcessesToUpdate::Some(&[Pid::from_u32(pid)]), true);
+                if let Some(p) = sys.process(Pid::from_u32(pid)) {
+                    let n = p.name().to_string_lossy().to_lowercase();
+                    if n.contains("skeledex") || n.contains("servidor-tecnico") {
+                        return true;
+                    }
+                }
+            }
+        }
+    }
+    let _ = fs::write(&lock, mio.to_string());
+    false
+}
+
 fn main() {
     asegurar_estructura();
+    if ya_corriendo() {
+        return;
+    }
     tauri::Builder::default()
         .setup(|app| {
             use tauri::menu::{Menu, MenuItem};
