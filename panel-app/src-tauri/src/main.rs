@@ -244,7 +244,8 @@ fn listar_backups(ruta_backups: String) -> String {
 
 // ---------- Descargar jar (PowerShell, fuera del loop) ----------
 #[tauri::command]
-fn descargar_jar(tipo: String, ruta_instancia: String) -> String {
+async fn descargar_jar(tipo: String, ruta_instancia: String) -> String {
+    tauri::async_runtime::spawn_blocking(move || {
     let script = if tipo == "purpur" {
         format!(
             "[Net.ServicePointManager]::SecurityProtocol=[Net.SecurityProtocolType]::Tls12; $v=(Invoke-RestMethod 'https://api.purpurmc.org/v2/purpur').versions[-1]; Invoke-WebRequest -Uri \"https://api.purpurmc.org/v2/purpur/$v/latest/download\" -OutFile '{}\\purpur.jar' -UseBasicParsing; \"Purpur $v descargado\"",
@@ -270,6 +271,9 @@ fn descargar_jar(tipo: String, ruta_instancia: String) -> String {
         }
         Err(e) => format!("Error: {}", e),
     }
+    })
+    .await
+    .unwrap_or_else(|_| "Error: tarea".to_string())
 }
 
 // ---------- Acciones (iniciar/apagar/reiniciar) ----------
@@ -298,22 +302,26 @@ fn ejecutar_accion(ruta_scripts: String, accion: String) {
 
 // ---------- PowerShell generico (oculto), devuelve stdout ----------
 #[tauri::command]
-fn ps_comando(script: String) -> String {
-    let output = nuevo_powershell()
-        .args(["-NoProfile", "-ExecutionPolicy", "Bypass", "-Command", &script])
-        .output();
-    match output {
-        Ok(o) => {
-            let s = String::from_utf8_lossy(&o.stdout).trim().to_string();
-            if s.is_empty() {
-                let err = String::from_utf8_lossy(&o.stderr).trim().to_string();
-                if err.is_empty() { String::new() } else { format!("ERROR: {}", err) }
-            } else {
-                s
+async fn ps_comando(script: String) -> String {
+    tauri::async_runtime::spawn_blocking(move || {
+        let output = nuevo_powershell()
+            .args(["-NoProfile", "-ExecutionPolicy", "Bypass", "-Command", &script])
+            .output();
+        match output {
+            Ok(o) => {
+                let s = String::from_utf8_lossy(&o.stdout).trim().to_string();
+                if s.is_empty() {
+                    let err = String::from_utf8_lossy(&o.stderr).trim().to_string();
+                    if err.is_empty() { String::new() } else { format!("ERROR: {}", err) }
+                } else {
+                    s
+                }
             }
+            Err(e) => format!("ERROR: {}", e),
         }
-        Err(e) => format!("ERROR: {}", e),
-    }
+    })
+    .await
+    .unwrap_or_else(|_| String::new())
 }
 
 // ---------- PowerShell elevado (UAC) para tareas programadas ----------

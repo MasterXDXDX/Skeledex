@@ -179,6 +179,7 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:18px;heigh
 button:focus-visible,input:focus-visible,select:focus-visible,.nav-btn:focus-visible,.theme-dot:focus-visible,[onclick]:focus-visible{ outline:2px solid var(--acento); outline-offset:2px; }
 .fab-save{position:fixed;right:26px;bottom:26px;z-index:600;display:flex;align-items:center;gap:8px;border:none;border-radius:30px;padding:13px 22px;background:linear-gradient(135deg,#1ea050,#17c060);color:#fff;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit;box-shadow:0 8px 26px rgba(0,0,0,.35);animation:fabIn .25s ease;}
 .fab-save:hover{filter:brightness(1.08);}
+.invalido{border:1px solid var(--rojo)!important;background:rgba(240,85,107,.08)!important;}
 @keyframes fabIn{from{opacity:0;transform:translateY(14px) scale(.95);}to{opacity:1;transform:none;}}
 .item:empty::after,.lista:empty::after{ content:""; }
 kbd{font-family:monospace;}
@@ -853,18 +854,20 @@ function renderChecklist(){
   h+='</div></div>'; c.innerHTML=h;
 }
 async function instalarJava(){
-  toast("Instalando Java (Adoptium)... puede tardar 1-2 min.","info");
+  mostrarCarga("Instalando Java (Adoptium)... puede tardar 1-2 min.");
   try{ var r=await invoke("ps_comando",{script:"& '"+RUTA_SCRIPTS+"\\_java_install.ps1'"}); var d=JSON.parse(r);
-    if(d.ok){ if(!config.servidor)config.servidor={}; config.servidor.java_exe=d.java; await invoke("escribir_archivo",{path:ARCHIVO_CONFIG,contenido:JSON.stringify(config,null,2)}); toast("Java instalado correctamente","ok"); cargarSaludExtra(); }
+    if(d.ok){ if(!config.servidor)config.servidor={}; config.servidor.java_exe=d.java; await invoke("escribir_archivo",{path:ARCHIVO_CONFIG,contenido:JSON.stringify(config,null,2)}); toast("Java instalado correctamente","ok"); saludExtraCache=null; await cargarSaludExtra(); }
     else { toast("No se pudo instalar Java ("+(d.error||"?")+")","error"); }
   }catch(e){ toast("Error: "+e,"error"); }
+  cerrarCarga();
 }
 async function instalarPlayit(){
-  toast("Instalando Playit...","info");
+  mostrarCarga("Instalando Playit...");
   try{ var r=await invoke("ps_comando",{script:"& '"+RUTA_SCRIPTS+"\\_playit_install.ps1'"}); var d=JSON.parse(r);
-    if(d.ok){ if(!config.red)config.red={}; config.red.metodo="playit"; await invoke("escribir_archivo",{path:ARCHIVO_CONFIG,contenido:JSON.stringify(config,null,2)}); toast("Playit instalado. Pulsa 'Configurar / vincular Playit'.","ok"); saludExtraCache=null; await cargarSaludExtra(); renderAjustes(); }
+    if(d.ok){ if(!config.red)config.red={}; config.red.metodo="playit"; await invoke("escribir_archivo",{path:ARCHIVO_CONFIG,contenido:JSON.stringify(config,null,2)}); toast("Playit instalado. Pulsa 'Configurar / vincular Playit'.","ok"); saludExtraCache=null; await cargarSaludExtra(); cerrarCarga(); renderAjustes(); return; }
     else { toast("No se pudo instalar Playit","error"); }
   }catch(e){ toast("Error: "+e,"error"); }
+  cerrarCarga();
 }
 function configurarPlayit(){
   toast("Abriendo Playit para vincular tu tunel...","info");
@@ -1136,38 +1139,39 @@ async function guardarMotorJar(motor,jar,version){
 async function instalarMotor(){
   var motor=document.getElementById("motorSel").value; var version=document.getElementById("motorVerSel").value;
   if(!version||version.indexOf("(")===0){ toast("Elige una version","error"); return; }
-  var msg=document.getElementById("msgMotor"); msg.style.color="var(--acento)"; msg.textContent="Instalando "+motor+" "+version+"... puede tardar.";
-  toast("Instalando "+motor+" "+version+"...","info");
+  var msg=document.getElementById("msgMotor"); mostrarCarga("Instalando "+motor+" "+version+"... puede tardar.");
   try{
     var r=await invoke("ps_comando",{script:"& '"+RUTA_SCRIPTS+"\\_motores.ps1' -Accion instalar -Motor '"+motor+"' -Version '"+version+"' -CarpetaInstancia '"+carpInst()+"'"});
     var d=JSON.parse(r);
     if(d.ok){ await guardarMotorJar(motor,d.jar,d.version); msg.style.color="var(--verde)"; msg.textContent=motor+" "+version+" instalado ("+d.jar+"). Reinicia para aplicar."; toast("Motor instalado","ok"); }
     else { msg.style.color="var(--rojo)"; msg.textContent="No se pudo instalar ("+(d.error||"?")+"). Si es Forge/NeoForge usa motor personalizado."; }
   }catch(e){ msg.style.color="var(--rojo)"; msg.textContent="Error: "+e; }
+  cerrarCarga();
 }
 async function actualizarMotorUltima(){
   var motor=document.getElementById("motorSel").value;
-  var msg=document.getElementById("msgMotor"); msg.style.color="var(--acento)"; msg.textContent="Actualizando "+motor+" a la ultima version...";
-  toast("Actualizando motor...","info");
+  var msg=document.getElementById("msgMotor"); mostrarCarga("Actualizando "+motor+" a la ultima version...");
   try{
     var r=await invoke("ps_comando",{script:"& '"+RUTA_SCRIPTS+"\\_motores.ps1' -Accion actualizar -Motor '"+motor+"' -CarpetaInstancia '"+carpInst()+"'"});
     var d=JSON.parse(r);
     if(d.ok){ await guardarMotorJar(motor,d.jar,d.version); msg.style.color="var(--verde)"; msg.textContent=motor+" actualizado a "+d.version+". Reinicia para aplicar."; toast("Motor actualizado a "+d.version,"ok"); cargarVersionesMotor(); }
     else { msg.style.color="var(--rojo)"; msg.textContent="No se pudo actualizar ("+(d.error||"?")+")."; }
   }catch(e){ msg.style.color="var(--rojo)"; msg.textContent="Error: "+e; }
+  cerrarCarga();
 }
 async function prepararServidor(){
-  var msg=document.getElementById("msgMotor"); msg.style.color="var(--acento)"; msg.textContent="Preparando servidor (descargando Purpur, EULA, RCON)... puede tardar 1-2 min...";
-  toast("Preparando servidor...","info");
+  var msg=document.getElementById("msgMotor"); mostrarCarga("Preparando servidor (Purpur + EULA + RCON)... puede tardar 1-2 min.");
   try{
     var r=await invoke("ps_comando",{script:"& '"+RUTA_SCRIPTS+"\\_primer_servidor.ps1'"});
     var d=JSON.parse(r);
     if(d.ok){ msg.style.color="var(--verde)"; msg.textContent="Listo: "+d.mensaje+". Ya puedes Iniciar."; toast("Servidor preparado","ok"); cargarConfig(); }
     else { msg.style.color="var(--rojo)"; msg.textContent="No se pudo preparar ("+(d.error||"?")+")."; }
   }catch(e){ msg.style.color="var(--rojo)"; msg.textContent="Error: "+e; }
+  cerrarCarga();
 }
-async function descargarJar(t){ toast("Descargando "+t+"... puede tardar","info"); var msg=document.getElementById("msgMotor"); msg.style.color="var(--acento)"; msg.textContent="Descargando "+t+"...";
-  var r=await invoke("descargar_jar",{tipo:t,rutaInstancia:rutaInst()}); var err=r.indexOf("Error")>=0; msg.style.color=err?"var(--rojo)":"var(--verde)"; msg.textContent=r; toast(err?"Error descargando":r,err?"error":"ok"); }
+async function descargarJar(t){ mostrarCarga("Descargando "+t+"... puede tardar."); var msg=document.getElementById("msgMotor");
+  try{ var r=await invoke("descargar_jar",{tipo:t,rutaInstancia:rutaInst()}); var err=r.indexOf("Error")>=0; msg.style.color=err?"var(--rojo)":"var(--verde)"; msg.textContent=r; toast(err?"Error descargando":r,err?"error":"ok"); }catch(e){ toast("Error: "+e,"error"); }
+  cerrarCarga(); }
 
 // ===== AJUSTES (Aternos-style cards) =====
 function inp(id,label,hint,val,ph){ var v=(val===undefined||val===null)?"":String(val); return '<div class="field"><label>'+label+'</label>'+(hint?'<div class="hint">'+hint+'</div>':'')+'<input id="'+id+'" value="'+v.replace(/"/g,"&quot;")+'" placeholder="'+(ph||"")+'"></div>'; }
@@ -1206,7 +1210,7 @@ function renderAjustes(){
   else { h+='<button class="act-btn act-save" style="width:100%;" onclick="instalarPlayit()">'+ico("download")+' Instalar Playit (1 clic)</button>'; }
   h+=inp("cfg_playit","Tu direccion de Playit","La primera vez que vincules, Playit te da una direccion (algo.playit.gg). Pegala aqui para compartirla.",red.playit_direccion,"algo.playit.gg")+'</div>';
   h+='<div id="red_duckdns">'+inp("cfg_duck_dom","DuckDNS dominio","Solo el nombre, sin .duckdns.org",red.duckdns_dominio)+inp("cfg_duck_tok","DuckDNS token","Lo da duckdns.org en tu cuenta.",red.duckdns_token)+'<div class="hint">Requiere abrir el puerto 25565 en tu router.</div></div>';
-  h+='<div id="red_manual">'+inp("cfg_ipman","Tu IP o dominio","La direccion que escribiran tus amigos.",red.ip_manual,"ej: 123.45.67.89:25565")+'</div>';
+  h+='<div id="red_manual">'+inp("cfg_ipman","Tu IP o dominio","La direccion que escribiran tus amigos.",red.ip_manual,"ej: 123.45.67.89:25565")+'<div class="item-btns"><button class="mini-btn" style="background:var(--acento);color:#fff;" onclick="detectarIP(\'publica\')">Detectar mi IP publica</button><button class="mini-btn" style="background:var(--card2);color:var(--texto);" onclick="detectarIP(\'local\')">Mi IP local (LAN)</button></div><div class="hint" style="margin-top:6px;">IP publica: necesitas abrir el puerto 25565 en tu router (o usa Playit, mas facil). IP local: solo para amigos en tu misma WiFi.</div></div>';
   h+=inp("cfg_dirpub","Direccion para compartir (opcional)","Si quieres forzar una direccion concreta para el boton Compartir. Si lo dejas vacio, se usa la de arriba.",red.direccion_publica,"se calcula sola");
   h+='</div>';
   // Discord
@@ -1283,7 +1287,7 @@ function renderAjustes(){
   var sc=document.getElementById("ajustesScroll"); if(sc){ sc.oninput=marcarCambioAjustes; sc.onchange=marcarCambioAjustes; }
   ocultarFab("fabGuardar");
 }
-function marcarCambioAjustes(){ var f=document.getElementById("fabGuardar"); if(f) f.style.display="flex"; }
+function marcarCambioAjustes(e){ var f=document.getElementById("fabGuardar"); if(f) f.style.display="flex"; if(e&&e.target&&e.target.classList) e.target.classList.remove("invalido"); }
 function ocultarFab(id){ var f=document.getElementById(id); if(f) f.style.display="none"; }
 function bannerRed(){ var m=gv("cfg_metodo"); var txt="";
   if(m==="playit") txt="Lo mas facil: no tocas el router. Instala Playit, y al iniciar te da una direccion (algo.playit.gg) que compartes a tus amigos.";
@@ -1291,6 +1295,21 @@ function bannerRed(){ var m=gv("cfg_metodo"); var txt="";
   else if(m==="manual") txt="Ya tienes una IP fija o dominio: escribela y eso es lo que compartes.";
   else txt="Solo LAN: tus amigos en la MISMA red/WiFi entran con tu IP local (algo como 192.168.x.x). Fuera de tu casa no funciona.";
   var b=document.getElementById("bannerRed"); if(b) b.textContent=txt; }
+async function detectarIP(tipo){
+  mostrarCarga("Detectando tu IP...");
+  var puerto=(config.servidor&&config.servidor.puerto)||25565;
+  var ps = (tipo==="local")
+    ? "(Get-NetIPAddress -AddressFamily IPv4 -ErrorAction SilentlyContinue | Where-Object { $_.IPAddress -like '192.168.*' -or $_.IPAddress -like '10.*' } | Select-Object -First 1 -ExpandProperty IPAddress)"
+    : "(Invoke-RestMethod 'https://api.ipify.org' -TimeoutSec 12)";
+  try{
+    var ip=(await invoke("ps_comando",{script:ps})||"").trim();
+    cerrarCarga();
+    if(ip && ip.indexOf("ERROR")<0 && ip.length>6 && ip.length<40){
+      var el=document.getElementById("cfg_ipman"); if(el){ el.value=ip+":"+puerto; el.classList.remove("invalido"); }
+      toast("IP detectada: "+ip+":"+puerto,"ok"); marcarCambioAjustes();
+    } else { toast("No se pudo detectar la IP","error"); }
+  }catch(e){ cerrarCarga(); toast("Error: "+e,"error"); }
+}
 function actualizarMetodoRed(){ var m=gv("cfg_metodo");
   var p=document.getElementById("red_playit"),d=document.getElementById("red_duckdns"),mn=document.getElementById("red_manual");
   if(p)p.style.display=(m==="playit")?"block":"none"; if(d)d.style.display=(m==="duckdns")?"block":"none"; if(mn)mn.style.display=(m==="manual")?"block":"none"; bannerRed(); }
@@ -1348,6 +1367,7 @@ async function conectarNube(){
   var datos={ tipo:inf.tipo, proveedor_s3:inf.s3, remoto:gv("cfg_nube_remoto").trim(), bucket:gv("cfg_nube_bucket").trim(), cuenta:gv("cfg_nube_cuenta").trim(), clave:gv("cfg_nube_clave").trim(), region:gv("cfg_nube_region").trim(), endpoint:gv("cfg_nube_endpoint").trim() };
   if(!datos.remoto||!datos.bucket){ msg.style.color="var(--rojo)"; msg.textContent="Falta nombre de remoto o bucket."; return; }
   if(!datos.cuenta||!datos.clave){ msg.style.color="var(--rojo)"; msg.textContent="Faltan las credenciales."; return; }
+  mostrarCarga("Conectando con la nube (instalando rclone si hace falta)...");
   try{
     await invoke("escribir_archivo",{path:RUTA_ESTADO+"\\_nube_tmp.json",contenido:JSON.stringify(datos)});
     var r=await invoke("ps_comando",{script:"& '"+RUTA_SCRIPTS+"\\_nube_conectar.ps1'"});
@@ -1359,6 +1379,7 @@ async function conectarNube(){
       toast("Nube conectada y guardada","ok");
     } else { msg.style.color="var(--rojo)"; msg.textContent="No se pudo conectar: "+r.replace("ERROR:",""); }
   }catch(e){ msg.style.color="var(--rojo)"; msg.textContent="Error: "+e; }
+  cerrarCarga();
 }
 async function asistenteNube(){
   toast("Abriendo asistente de rclone...","info");
@@ -1420,10 +1441,14 @@ function filtrarAjustes(){ var q=(gv("ajustesBuscar")||"").toLowerCase().trim();
 async function guardarAjustes(){
   try{
     // Validacion
-    if(!gv("cfg_nombre").trim()){ toast("Falta tu nombre","error"); return; }
-    if(!gv("cfg_estepc").trim()){ toast("Falta el nombre de este PC","error"); return; }
-    var ramN=parseInt(gv("cfg_ram")); if(gv("cfg_ram") && (isNaN(ramN)||ramN<1||ramN>64)){ toast("RAM invalida (1-64 GB)","error"); return; }
-    if(gvb("cfg_usardc") && gv("cfg_webhook").indexOf("discord.com/api/webhooks/")<0){ toast("El webhook de Discord no parece valido","error"); return; }
+    // Validacion con resaltado en rojo
+    function marcar(id,bad){ var e=document.getElementById(id); if(e){ if(bad){e.classList.add("invalido");}else{e.classList.remove("invalido");} } }
+    var errs=[];
+    var bn=!gv("cfg_nombre").trim(); marcar("cfg_nombre",bn); if(bn) errs.push("tu nombre");
+    var bp=!gv("cfg_estepc").trim(); marcar("cfg_estepc",bp); if(bp) errs.push("nombre de este PC");
+    var puerto=parseInt(gv("cfg_puerto")); var bpu=(gv("cfg_puerto")&&(isNaN(puerto)||puerto<1||puerto>65535)); marcar("cfg_puerto",bpu); if(bpu) errs.push("puerto (1-65535)");
+    var bw=(gvb("cfg_usardc") && gv("cfg_webhook").indexOf("discord.com/api/webhooks/")<0); marcar("cfg_webhook",bw); if(bw) errs.push("webhook de Discord");
+    if(errs.length){ toast("Revisa los campos en rojo: "+errs.join(", "),"error"); return; }
     config.identidad.nombre_usuario=gv("cfg_nombre"); config.identidad.este_pc=gv("cfg_estepc");
     var ram=gv("cfg_ram")||"4"; config.servidor.java_args="-Xms2G -Xmx"+ram+"G -XX:+UseG1GC"; config.servidor.jar_nombre=gv("cfg_jar"); config.servidor.puerto=parseInt(gv("cfg_puerto"))||25565;
     if(!config.red)config.red={}; config.red.metodo=gv("cfg_metodo"); config.red.direccion_publica=gv("cfg_dirpub"); config.red.playit_direccion=gv("cfg_playit"); config.red.duckdns_dominio=gv("cfg_duck_dom"); config.red.duckdns_token=gv("cfg_duck_tok"); config.red.ip_manual=gv("cfg_ipman");
@@ -1589,7 +1614,7 @@ function logoSVG(sz){ return '<svg viewBox="0 0 48 48" style="width:'+sz+'px;hei
 function configBase(){ return {
   _comentario:"Config generada por Skeledex. Se guarda en %APPDATA%\\Skeledex.",
   local:false,
-  identidad:{pc_id:"ST-"+Math.random().toString(16).substring(2,8),nombre_usuario:"",este_pc:"",otro_pc:"",rol:"owner",version_sistema:"1.0.2"},
+  identidad:{pc_id:"ST-"+Math.random().toString(16).substring(2,8),nombre_usuario:"",este_pc:"",otro_pc:"",rol:"owner",version_sistema:"1.0.3"},
   nube:{proveedor:"Backblaze B2",tipo_rclone:"b2",rclone_remoto:"minube",bucket:"",carpeta_mundo:"mundo-activo",carpeta_backups_nube:"backups-nube",archivo_lock:"turno.lock",archivo_estado_nube:"estado-nube.json",limite_gb:10},
   servidor:{java_exe:"java",jar_nombre:"purpur.jar",java_args:"-Xms2G -Xmx4G -XX:+UseG1GC",carpeta_instancia:"Instancia",puerto:25565,rcon_puerto:25575,rcon_password:"Skeledex"+Math.floor(Math.random()*100000),tiempo_espera_inicio_seg:60,tiempo_espera_apagado_seg:120},
   instancias:[{nombre:"Principal",carpeta:"Instancia"}],
@@ -1704,13 +1729,14 @@ async function giGuardar(){ var msg=document.getElementById("gi_msg"); var n=gv(
   if(!n||!cp){ msg.style.color="var(--rojo)"; msg.textContent="Falta nombre/carpeta."; return; }
   if(!config.instancias)config.instancias=[]; if(config.instancias.some(function(x){return x.carpeta===cp;})){ msg.style.color="var(--rojo)"; msg.textContent="Ya existe esa carpeta."; return; }
   var motor=gv("gi_motor")||"purpur"; var version=gv("gi_ver"); var jar="";
-  msg.style.color="var(--acento)"; msg.textContent="Creando instancia"+(version&&version.indexOf("(")!==0?(" e instalando "+motor+" "+version+" (puede tardar)..."):"...");
+  mostrarCarga("Creando instancia"+(version&&version.indexOf("(")!==0?(" e instalando "+motor+" "+version+" (puede tardar)..."):"..."));
   try{ await invoke("ps_comando",{script:"New-Item -ItemType Directory -Force -Path '"+RUTA_BASE+"\\"+cp+"' | Out-Null"}); }catch(e){}
   if(version && version.indexOf("(")!==0){
     try{ var d=JSON.parse(await invoke("ps_comando",{script:"& '"+RUTA_SCRIPTS+"\\_motores.ps1' -Accion instalar -Motor '"+motor+"' -Version '"+version+"' -CarpetaInstancia '"+cp+"'"})); if(d.ok){ jar=d.jar; } }catch(e){}
   }
   config.instancias.push({nombre:n,carpeta:cp,motor:motor,jar:(jar||"purpur.jar")});
   var ok=await invoke("escribir_archivo",{path:ARCHIVO_CONFIG,contenido:JSON.stringify(config,null,2)});
+  cerrarCarga();
   if(ok){ toast("Instancia '"+n+"' creada","ok"); abrirGestorInstancias(); } else { msg.style.color="var(--rojo)"; msg.textContent="Error al guardar."; } }
 async function cambiarInstancia(carpeta,nombre){
   if(prevOnline){ toast("Apaga el servidor antes de cambiar de instancia","info"); return; }
