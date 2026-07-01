@@ -162,7 +162,17 @@ function Flujo-Iniciar {
         # PASO 8: Iniciar Paper
         Escribir-Log "Iniciando servidor Paper..." "INFO"
         $jarPath  = Join-Path $rutaInstancia $config.servidor.jar_nombre
-        $javaArgs = $config.servidor.java_args -split " "
+        # Sanear RAM: si -Xms es mayor que -Xmx la JVM no arranca (consola queda vacia)
+        $argsStr = $config.servidor.java_args
+        $mXms = [regex]::Match($argsStr, '-Xms(\d+)G'); $mXmx = [regex]::Match($argsStr, '-Xmx(\d+)G')
+        if ($mXms.Success -and $mXmx.Success) {
+            $vXms = [int]$mXms.Groups[1].Value; $vXmx = [int]$mXmx.Groups[1].Value
+            if ($vXms -gt $vXmx) {
+                $argsStr = [regex]::Replace($argsStr, '-Xms\d+G', ("-Xms" + $vXmx + "G"))
+                Escribir-Log "Ajustada la RAM inicial a $vXmx GB (no puede superar la maxima)." "AVISO"
+            }
+        }
+        $javaArgs = $argsStr -split " "
 
         $proceso = Start-Process -FilePath $config.servidor.java_exe `
             -ArgumentList ($javaArgs + @("-jar", $jarPath, "nogui")) `

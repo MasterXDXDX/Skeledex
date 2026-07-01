@@ -404,7 +404,7 @@ var ICONS = {
   globe:'<circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15 15 0 0 1 0 20 15 15 0 0 1 0-20z"/>',
   heart:'<path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>',
   download:'<path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/>',
-  check:'<poleline points="20 6 9 17 4 12"/><polyline points="20 6 9 17 4 12"/>',
+  check:'<polyline points="20 6 9 17 4 12"/>',
   alert:'<path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>',
   info:'<circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/>',
   id:'<rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="9" cy="10" r="2"/><path d="M15 8h4M15 12h4M7 16h10"/>',
@@ -833,7 +833,7 @@ async function cargarSaludExtra(){
     var s=JSON.parse(await invoke("ps_comando",{script:"& '"+RUTA_SCRIPTS+"\\_salud_extra.ps1'"}));
     saludExtraCache=s;
     var j=document.getElementById("hJava"); if(j){ j.className="hdot "+(s.java?"ok":"fail"); document.getElementById("hJavaT").textContent="Java"+(s.java_version?" "+s.java_version:" (falta)"); }
-    var n=document.getElementById("hNube"); if(n) n.className="hdot "+(s.rclone?"ok":"fail");
+    var n=document.getElementById("hNube"); if(n){ if(config.local){ if(n.parentElement) n.parentElement.style.display="none"; } else { if(n.parentElement) n.parentElement.style.display=""; n.className="hdot "+(s.rclone?"ok":"fail"); } }
     var rm=document.getElementById("hRam"); if(rm){ rm.className="hdot "+(s.ram_libre_gb>1?"ok":"fail"); document.getElementById("hRamT").textContent="RAM libre: "+s.ram_libre_gb+" GB"; }
     renderChecklist();
   }catch(e){}
@@ -946,7 +946,7 @@ async function accion(t){
   document.getElementById(btn).innerHTML=ico("restart").replace("svg","svg class=spin")+" Espera...";
   toast(t==="iniciar"?"Iniciando servidor...":t==="apagar"?"Apagando servidor...":"Reiniciando servidor...","info");
   if(t==="iniciar"||t==="reiniciar") iniciarProgreso();
-  try{ await invoke("ejecutar_accion",{rutaScripts:RUTA_SCRIPTS,accion:t}); }catch(e){ toast("Error: "+e,"error"); }
+  try{ await invoke("ejecutar_accion",{rutaScripts:RUTA_SCRIPTS,accion:t}); }catch(e){ toast("Error: "+e,"error"); accionEnCurso=false; if(progInterval){clearInterval(progInterval);progInterval=null;} var be=document.getElementById(btn); if(be) be.innerHTML=orig; }
   setTimeout(actualizar,2500);
 }
 
@@ -997,7 +997,7 @@ async function reiniciarConAviso(){
   setTimeout(function(){ rconCmd('say §eReinicio en 30 segundos...'); },30000);
   setTimeout(function(){ rconCmd('say §eReinicio en 10 segundos...'); },50000);
   setTimeout(function(){ rconCmd('say §cReiniciando ahora...'); },58000);
-  setTimeout(function(){ accion("reiniciar"); },60000);
+  setTimeout(function(){ confirmaPend="reiniciar"; accion("reiniciar"); },60000);
 }
 
 async function cargarBackups(){
@@ -1093,8 +1093,9 @@ function renderMotdPreview(){ var inp=document.getElementById("prop_motd"); var 
   pv.innerHTML=html||'<span style="color:#888;">(vacio)</span>'; }
 function insertarColorMotd(code){ var inp=document.getElementById("prop_motd"); if(!inp) return; var p=inp.selectionStart||inp.value.length; inp.value=inp.value.substring(0,p)+code+inp.value.substring(p); renderMotdPreview(); inp.focus(); }
 function filtrarProps(){ var q=(document.getElementById("propsBuscar").value||"").toLowerCase().trim(); var c=document.getElementById("propsAvanzado"); if(!c) return; var fs=c.querySelectorAll(".field"); for(var i=0;i<fs.length;i++){ var t=(fs[i].textContent||"").toLowerCase(); fs[i].style.display=(!q||t.indexOf(q)>=0)?"":"none"; } }
-async function guardarProps(){ var nuevas=propsRaw.split("\n").map(function(l){ var lc=l.replace("\r","");
-  for(var j=0;j<CAMPOS.length;j++){ if(lc.indexOf(CAMPOS[j].key+"=")===0){ var val=CAMPOS[j].tipo==="bool"?(gvb("prop_"+CAMPOS[j].key)?"true":"false"):document.getElementById("prop_"+CAMPOS[j].key).value; return CAMPOS[j].key+"="+val; } } return lc; });
+async function guardarProps(){ var propsFound={}; var nuevas=propsRaw.split("\n").map(function(l){ var lc=l.replace("\r","");
+  for(var j=0;j<CAMPOS.length;j++){ if(lc.indexOf(CAMPOS[j].key+"=")===0){ propsFound[CAMPOS[j].key]=1; var val=CAMPOS[j].tipo==="bool"?(gvb("prop_"+CAMPOS[j].key)?"true":"false"):document.getElementById("prop_"+CAMPOS[j].key).value; return CAMPOS[j].key+"="+val; } } return lc; });
+  CAMPOS.forEach(function(cmp){ if(!propsFound[cmp.key]){ var el=document.getElementById("prop_"+cmp.key); if(el||cmp.tipo==="bool"){ var val=cmp.tipo==="bool"?(gvb("prop_"+cmp.key)?"true":"false"):(el?el.value:""); nuevas.push(cmp.key+"="+val); } } });
   var ok=await invoke("escribir_archivo",{path:rutaInst()+"\\server.properties",contenido:nuevas.join("\n")});
   if(ok){ propsRaw=nuevas.join("\n"); toast("Propiedades guardadas. Reinicia para aplicar.","ok"); ocultarFab("fabGuardarProps"); } else { toast("Error al guardar","error"); } }
 var avV=false;
@@ -1471,7 +1472,7 @@ async function guardarAjustes(){
     var bw=(gvb("cfg_usardc") && gv("cfg_webhook").indexOf("discord.com/api/webhooks/")<0); marcar("cfg_webhook",bw); if(bw) errs.push("webhook de Discord");
     if(errs.length){ toast("Revisa los campos en rojo: "+errs.join(", "),"error"); return; }
     config.identidad.nombre_usuario=gv("cfg_nombre"); config.identidad.este_pc=gv("cfg_estepc");
-    var ram=gv("cfg_ram")||"4"; config.servidor.java_args="-Xms2G -Xmx"+ram+"G -XX:+UseG1GC"; config.servidor.jar_nombre=gv("cfg_jar"); config.servidor.puerto=parseInt(gv("cfg_puerto"))||25565;
+    var ram=parseInt(gv("cfg_ram"))||4; var xms=Math.min(2,ram); config.servidor.java_args="-Xms"+xms+"G -Xmx"+ram+"G -XX:+UseG1GC"; config.servidor.jar_nombre=gv("cfg_jar"); config.servidor.puerto=parseInt(gv("cfg_puerto"))||25565;
     if(!config.red)config.red={}; config.red.metodo=gv("cfg_metodo"); config.red.direccion_publica=gv("cfg_dirpub"); config.red.playit_direccion=gv("cfg_playit"); config.red.duckdns_dominio=gv("cfg_duck_dom"); config.red.duckdns_token=gv("cfg_duck_tok"); config.red.ip_manual=gv("cfg_ipman");
     if(!config.discord)config.discord={}; config.discord.usar=gvb("cfg_usardc"); config.discord.webhook_url=gv("cfg_webhook"); config.discord.nombre_bot=gv("cfg_botname");
     config.discord.notificar_inicio=gvb("cfg_notif_estado"); config.discord.notificar_apagado=gvb("cfg_notif_estado"); config.discord.notificar_jugadores=gvb("cfg_notif_jug");
@@ -1641,7 +1642,7 @@ function logoSVG(sz){ return '<svg viewBox="0 0 48 48" style="width:'+sz+'px;hei
 function configBase(){ return {
   _comentario:"Config generada por Skeledex. Se guarda en %APPDATA%\\Skeledex.",
   local:false,
-  identidad:{pc_id:"ST-"+Math.random().toString(16).substring(2,8),nombre_usuario:"",este_pc:"",otro_pc:"",rol:"owner",version_sistema:"1.0.5"},
+  identidad:{pc_id:"ST-"+Math.random().toString(16).substring(2,8),nombre_usuario:"",este_pc:"",otro_pc:"",rol:"owner",version_sistema:"1.0.6"},
   nube:{proveedor:"Backblaze B2",tipo_rclone:"b2",rclone_remoto:"minube",bucket:"",carpeta_mundo:"mundo-activo",carpeta_backups_nube:"backups-nube",archivo_lock:"turno.lock",archivo_estado_nube:"estado-nube.json",limite_gb:10},
   servidor:{java_exe:"java",jar_nombre:"purpur.jar",java_args:"-Xms2G -Xmx4G -XX:+UseG1GC",carpeta_instancia:"Instancia",puerto:25565,rcon_puerto:25575,rcon_password:"Skeledex"+Math.floor(Math.random()*100000),tiempo_espera_inicio_seg:60,tiempo_espera_apagado_seg:120},
   instancias:[{nombre:"Principal",carpeta:"Instancia"}],
