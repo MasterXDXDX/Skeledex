@@ -1292,8 +1292,11 @@ function renderAjustes(){
   h+='<button class="mini-btn" onclick="quitarTareas()">'+ico("trash")+' Quitar tareas</button>';
   h+='<button class="mini-btn" style="background:var(--card2);color:var(--texto);" onclick="exportarConfig()">'+ico("upload")+' Exportar config</button>';
   h+='<button class="mini-btn" style="background:var(--card2);color:var(--texto);" onclick="importarConfig()">'+ico("download")+' Importar config</button>';
+  h+='<button class="mini-btn" style="background:var(--card2);color:var(--texto);" onclick="repararInstalacion()">'+ico("tools")+' Reparar instalacion</button>';
   h+='</div><div class="msg" id="msgMant"></div></div>';
   h+='<button class="act-btn act-save" onclick="guardarAjustes()">'+ico("save")+' Guardar configuracion</button><div class="msg" id="msgAjustes"></div>';
+  var vv=(config.identidad&&config.identidad.version_sistema)||"?";
+  h+='<div style="text-align:center;opacity:.55;font-size:12px;margin-top:14px;padding-bottom:8px;">Skeledex v'+vv+' &middot; hecho para jugar con amigos</div>';
   document.getElementById("ajustesScroll").innerHTML=h;
   actualizarMetodoRed(); actualizarDiscord(); bannerRed(); actualizarNubeUI(); actualizarStatusPer(); actualizarLocalUI();
   var sc=document.getElementById("ajustesScroll"); if(sc){ sc.oninput=marcarCambioAjustes; sc.onchange=marcarCambioAjustes; }
@@ -1414,6 +1417,12 @@ async function quitarTareas(){
   var ps="Unregister-ScheduledTask -TaskName 'Skeledex_ReinicioDiario' -Confirm:$false -ErrorAction SilentlyContinue; Unregister-ScheduledTask -TaskName 'Skeledex_BackupDiario' -Confirm:$false -ErrorAction SilentlyContinue";
   try{ await invoke("ps_elevado",{script:ps}); msg.style.color="var(--verde)"; msg.textContent="Tareas quitadas (acepta el UAC)."; }
   catch(e){ msg.style.color="var(--rojo)"; msg.textContent="Error: "+e; }
+}
+async function repararInstalacion(){
+  var msg=document.getElementById("msgMant");
+  mostrarCarga("Reparando instalacion...");
+  try{ var r=await invoke("reparar"); cerrarCarga(); msg.style.color="var(--verde)"; msg.textContent=r||"Reparado."; toast("Instalacion reparada","ok"); }
+  catch(e){ cerrarCarga(); msg.style.color="var(--rojo)"; msg.textContent="Error: "+e; }
 }
 async function exportarConfig(){
   var msg=document.getElementById("msgMant");
@@ -1632,7 +1641,7 @@ function logoSVG(sz){ return '<svg viewBox="0 0 48 48" style="width:'+sz+'px;hei
 function configBase(){ return {
   _comentario:"Config generada por Skeledex. Se guarda en %APPDATA%\\Skeledex.",
   local:false,
-  identidad:{pc_id:"ST-"+Math.random().toString(16).substring(2,8),nombre_usuario:"",este_pc:"",otro_pc:"",rol:"owner",version_sistema:"1.0.4"},
+  identidad:{pc_id:"ST-"+Math.random().toString(16).substring(2,8),nombre_usuario:"",este_pc:"",otro_pc:"",rol:"owner",version_sistema:"1.0.5"},
   nube:{proveedor:"Backblaze B2",tipo_rclone:"b2",rclone_remoto:"minube",bucket:"",carpeta_mundo:"mundo-activo",carpeta_backups_nube:"backups-nube",archivo_lock:"turno.lock",archivo_estado_nube:"estado-nube.json",limite_gb:10},
   servidor:{java_exe:"java",jar_nombre:"purpur.jar",java_args:"-Xms2G -Xmx4G -XX:+UseG1GC",carpeta_instancia:"Instancia",puerto:25565,rcon_puerto:25575,rcon_password:"Skeledex"+Math.floor(Math.random()*100000),tiempo_espera_inicio_seg:60,tiempo_espera_apagado_seg:120},
   instancias:[{nombre:"Principal",carpeta:"Instancia"}],

@@ -65,6 +65,16 @@ fn ruta_base() -> String {
     ruta_base_interna()
 }
 
+// Repara la instalacion: recrea carpetas y fuerza re-extraccion de todos los scripts.
+#[tauri::command]
+fn reparar() -> String {
+    let base = ruta_base_interna();
+    let marker = format!("{}\\Estado\\scripts_version.txt", base);
+    let _ = fs::remove_file(&marker);
+    asegurar_estructura();
+    format!("Reparado: {} scripts restaurados en {}\\Scripts", SCRIPTS_EMBED.len(), base)
+}
+
 // Carpeta de configuracion del usuario (fuera del programa = portable)
 #[tauri::command]
 fn ruta_appdata() -> String {
@@ -426,6 +436,7 @@ fn main() {
             escribir_debug,
             ruta_base,
             ruta_appdata,
+            reparar,
             estado_proceso,
             info_salud,
             rcon,
