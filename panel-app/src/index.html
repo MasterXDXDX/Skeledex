@@ -265,8 +265,14 @@ kbd{font-family:monospace;}
       <button class="mini-btn" style="background:var(--card2);color:var(--texto);" onclick="analizarCrash()">Diagnostico</button>
     </div>
     <div class="log" id="logArea"></div>
+    <div class="cmd-quick" style="display:flex;gap:6px;flex-wrap:wrap;margin:8px 0;">
+      <button class="mini-btn" style="background:var(--card2);color:var(--texto);" onclick="cmdRapido('time set day')">Poner de dia</button>
+      <button class="mini-btn" style="background:var(--card2);color:var(--texto);" onclick="cmdRapido('time set night')">Poner de noche</button>
+      <button class="mini-btn" style="background:var(--card2);color:var(--texto);" onclick="cmdRapido('weather clear')">Despejar clima</button>
+      <button class="mini-btn" style="background:var(--card2);color:var(--texto);" onclick="cmdRapido('save-all')">Guardar mundo</button>
+    </div>
     <div class="cmd-row" id="cmdRow">
-      <input class="cmd-input" id="cmdInput" placeholder="Escribe un comando de Minecraft..." onkeydown="if(event.key==='Enter')enviarCmd()">
+      <input class="cmd-input" id="cmdInput" placeholder="Escribe un comando (ej: time set day, gamemode creative Nombre)..." onkeydown="if(event.key==='Enter')enviarCmd()">
       <button class="btn-send" onclick="enviarCmd()" id="btnSend" aria-label="Enviar comando"></button>
     </div>
   </div>
@@ -598,6 +604,8 @@ async function init(){
     var t=localStorage.getItem("tema")||"azul"; setTema(t); aplicarAccentoGuardado();
     aplicarRol();
     resolverIP();
+    // Aviso si se acaba de actualizar
+    try{ var vAhora=(config.identidad&&config.identidad.version_sistema)||""; var vPrev=localStorage.getItem("ultimaVersionVista"); if(vAhora && vPrev && vPrev!==vAhora){ setTimeout(function(){ toast("Actualizado a Skeledex v"+vAhora,"ok"); },1200); } if(vAhora) localStorage.setItem("ultimaVersionVista",vAhora); }catch(e){}
     actualizarCuenta();
     actualizarInstSel();
     // Canal central: si auto ON y hay repo, busca mejoras en segundo plano
@@ -950,8 +958,8 @@ async function accion(t){
   setTimeout(actualizar,2500);
 }
 
-async function enviarCmd(){ var i=document.getElementById("cmdInput"),c=i.value.trim(); if(!c)return; i.value="";
-  var lg=document.getElementById("logArea"),cd=document.createElement("div"); cd.className="log-cmd"; cd.textContent="> "+c; lg.appendChild(cd);
+function cmdRapido(c){ if(document.getElementById("btnStop") && document.getElementById("btnStop").disabled){ toast("El servidor debe estar encendido","info"); return; } var i=document.getElementById("cmdInput"); if(i){ i.value=c; enviarCmd(); } }
+async function enviarCmd(){ var i=document.getElementById("cmdInput"),c=i.value.trim(); if(!c)return; i.value="";  var lg=document.getElementById("logArea"),cd=document.createElement("div"); cd.className="log-cmd"; cd.textContent="> "+c; lg.appendChild(cd);
   try{ var r=await rconCmd(c); var rd=document.createElement("div"); rd.className=r.indexOf("[RCON no responde]")>=0?"log-error":"log-resp"; rd.textContent="  "+r; lg.appendChild(rd); }catch(e){} lg.scrollTop=lg.scrollHeight; }
 
 async function cargarJugadores(){
@@ -1061,20 +1069,22 @@ function copiarIP(){ if(ipActual){ try{ navigator.clipboard.writeText(ipActual);
 function abrirCarpeta(sub){ var ruta=sub?RUTA_BASE+"\\"+sub:RUTA_BASE; try{ invoke("abrir_carpeta",{ruta:ruta}); }catch(e){} }
 
 // ===== MUNDO (server.properties) =====
-var CAMPOS=[{key:"motd",label:"MOTD",tipo:"text"},{key:"gamemode",label:"Modo",tipo:"select",opts:["survival","creative","adventure","spectator"]},
-{key:"difficulty",label:"Dificultad",tipo:"select",opts:["peaceful","easy","normal","hard"]},{key:"max-players",label:"Max jugadores",tipo:"text"},
-{key:"level-seed",label:"Seed",tipo:"text"},{key:"pvp",label:"PvP",tipo:"bool"},{key:"online-mode",label:"Premium (online-mode)",tipo:"bool"},
-{key:"view-distance",label:"Render dist",tipo:"text"},{key:"simulation-distance",label:"Sim dist",tipo:"text"},{key:"allow-flight",label:"Permitir volar",tipo:"bool"}];
+var CAMPOS=[{key:"motd",label:"MOTD (mensaje del server)",tipo:"text",hint:"El texto que ven tus amigos en la lista de servidores."},{key:"gamemode",label:"Modo de juego",tipo:"select",opts:["survival","creative","adventure","spectator"],hint:"survival = normal. creative = bloques infinitos y volar."},
+{key:"difficulty",label:"Dificultad",tipo:"select",opts:["peaceful","easy","normal","hard"],hint:"peaceful = sin monstruos."},{key:"max-players",label:"Maximo de jugadores",tipo:"text",hint:"Cuantos pueden entrar a la vez."},
+{key:"level-seed",label:"Semilla del mundo (seed)",tipo:"text",hint:"Vacio = mundo aleatorio. Solo aplica a mundos nuevos."},{key:"pvp",label:"PvP (pelear entre jugadores)",tipo:"bool",hint:"Si esta activo, los jugadores pueden hacerse dano."},{key:"online-mode",label:"Solo cuentas premium",tipo:"bool",hint:"Activado = solo Minecraft original. Desactivalo si algun amigo usa version no premium."},
+{key:"view-distance",label:"Distancia de vista (chunks)",tipo:"text",hint:"Que tan lejos se ve. Mas alto = mas bonito pero mas pesado (10-12 recomendado)."},{key:"simulation-distance",label:"Distancia de simulacion",tipo:"text",hint:"Radio donde ocurren mobs y cultivos. Bajalo si va lento (8-10)."},{key:"allow-flight",label:"Permitir volar",tipo:"bool",hint:"Activalo si usas plugins de volar; si no, expulsa por 'volar'."}];
 var propsRaw="";
 async function cargarConfig(){
   try{ propsRaw=await invoke("leer_archivo",{path:rutaInst()+"\\server.properties"});
     var props={}; propsRaw.split("\n").forEach(function(l){ l=l.replace("\r",""); if(l&&l.indexOf("=")>0&&l[0]!=="#"){ var i=l.indexOf("="); props[l.substring(0,i).trim()]=l.substring(i+1).trim(); } });
     var c=document.getElementById("propsContainer"); c.innerHTML="";
     CAMPOS.forEach(function(f){ var v=props[f.key]||"";
-      if(f.tipo==="bool"){ c.innerHTML+=tog("prop_"+f.key,f.label,"",v==="true"); return; }
+      if(f.tipo==="bool"){ c.innerHTML+=tog("prop_"+f.key,f.label,f.hint||"",v==="true"); return; }
       var h='<div class="field"><label>'+f.label+'</label>';
       if(f.tipo==="select"){ h+='<select id="prop_'+f.key+'">'; f.opts.forEach(function(o){ h+='<option'+(o===v?" selected":"")+'>'+o+'</option>'; }); h+='</select>'; }
-      else { h+='<input id="prop_'+f.key+'" value="'+v.replace(/"/g,"&quot;")+'">'; } h+='</div>'; c.innerHTML+=h; });
+      else { h+='<input id="prop_'+f.key+'" value="'+v.replace(/"/g,"&quot;")+'">'; }
+      if(f.hint){ h+='<div class="cfg-card-desc" style="margin-top:3px;">'+f.hint+'</div>'; }
+      h+='</div>'; c.innerHTML+=h; });
     document.getElementById("motorActual").textContent="Motor actual: "+(config.servidor?config.servidor.jar_nombre:"?");
     var moi=document.getElementById("prop_motd"); if(moi){ moi.oninput=renderMotdPreview; renderMotdPreview(); }
     var pc=document.getElementById("propsContainer"); if(pc){ pc.oninput=function(){ var f=document.getElementById("fabGuardarProps"); if(f) f.style.display="flex"; }; pc.onchange=pc.oninput; }
@@ -1642,7 +1652,7 @@ function logoSVG(sz){ return '<svg viewBox="0 0 48 48" style="width:'+sz+'px;hei
 function configBase(){ return {
   _comentario:"Config generada por Skeledex. Se guarda en %APPDATA%\\Skeledex.",
   local:false,
-  identidad:{pc_id:"ST-"+Math.random().toString(16).substring(2,8),nombre_usuario:"",este_pc:"",otro_pc:"",rol:"owner",version_sistema:"1.0.6"},
+  identidad:{pc_id:"ST-"+Math.random().toString(16).substring(2,8),nombre_usuario:"",este_pc:"",otro_pc:"",rol:"owner",version_sistema:"1.0.7"},
   nube:{proveedor:"Backblaze B2",tipo_rclone:"b2",rclone_remoto:"minube",bucket:"",carpeta_mundo:"mundo-activo",carpeta_backups_nube:"backups-nube",archivo_lock:"turno.lock",archivo_estado_nube:"estado-nube.json",limite_gb:10},
   servidor:{java_exe:"java",jar_nombre:"purpur.jar",java_args:"-Xms2G -Xmx4G -XX:+UseG1GC",carpeta_instancia:"Instancia",puerto:25565,rcon_puerto:25575,rcon_password:"Skeledex"+Math.floor(Math.random()*100000),tiempo_espera_inicio_seg:60,tiempo_espera_apagado_seg:120},
   instancias:[{nombre:"Principal",carpeta:"Instancia"}],
